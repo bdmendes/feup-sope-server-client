@@ -1,0 +1,28 @@
+{
+    "clang-format.style": "{BasedOnStyle: LLVM, IndentWidth: 4, AllowShortBlocksOnASingleLine: Never, AllowShortCaseLabelsOnASingleLine: false, AllowShortFunctionsOnASingleLine: None, IndentCaseLabels: true}",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 150,
+    "files.associations": {
+        "stat.h": "c",
+        "stdio.h": "c",
+        "utils.h": "c",
+        "*.tcc": "c",
+        "cmath": "c",
+        "time.h": "c",
+        "exception": "c",
+        "optional": "c",
+        "memory": "c",
+        "istream": "c",
+        "mutex": "c",
+        "new": "c",
+        "ostream": "c",
+        "system_error": "c",
+        "stdexcept": "cpp",
+        "typeinfo": "cpp",
+        "stdbool.h": "c",
+        "condition_variable": "c",
+        "input_validation.h": "c"
+    },
+}
