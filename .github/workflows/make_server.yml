@@ -13,5 +13,5 @@ jobs:
 
     steps:
     - name: make
-      working-directory: server
+      working-directory: ./server
       run: make
