@@ -5,11 +5,11 @@ server/s
 # Prerequisites
 *.d
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+# Object files - let them in due to the black box
+#*.o
+#*.ko
+#*.obj
+#*.elf
 
 # Linker output
 *.ilk

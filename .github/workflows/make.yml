@@ -1,4 +1,4 @@
-name: Make client
+name: Make
 
 on:
   push:
@@ -13,4 +13,4 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - run: cd client && make
+    - run: cd src && make
