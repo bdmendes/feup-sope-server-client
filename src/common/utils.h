@@ -3,4 +3,6 @@
 
 int make_fifo();
 
+int delete_fifo();
+
 #endif

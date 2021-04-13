@@ -10,6 +10,8 @@
 
 void *func_1(void *a) {
 	make_fifo();
+  delete_fifo();
+  make_fifo();
 	pthread_exit(NULL);	// no termination code
 }
 
@@ -20,4 +22,4 @@ int main() {
 	pthread_join(id1, NULL);
 	return 0;
   
-  }
+}
