@@ -12,7 +12,7 @@ int make_fifo(){
     pid_t tid = gettid();
     
     snprintf(buf + strlen(buf), sizeof(buf), "/tmp/%d.%d", pid, tid);
-    if(mkfifo(buf, 0666) < 0) {
+    if(mkfifo(buf, S_IRWXU | S_IRWXG | S_IRWXO) < 0) {
         perror("Couldn't make fifo");
         return -1;
     }
