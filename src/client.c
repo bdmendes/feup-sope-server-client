@@ -6,13 +6,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
-
-#define NTHREADS 2
+#include <string.h>
 
 void *func_1(void *a) {
 	make_fifo();
 	pthread_exit(NULL);	// no termination code
-	}
+}
 
 int main() {
 	pthread_t id1;
