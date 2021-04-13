@@ -1,10 +1,10 @@
-all: s c
+all: s c 
 
 s: server.o lib.o delay.c delay.h
 	gcc -Wall -DDELAY=0 -o s delay.c lib.o server.o -pthread
 
-c: client.c
-	gcc -Wall -o c client.c -pthread
+c: client.c utils.c
+	gcc -Wall -o c client.c utils.c -pthread
 
 # server.o: server.c
 # 	gcc -Wall -c -o server.o server.c
