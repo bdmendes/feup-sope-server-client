@@ -1,4 +1,3 @@
-#include "utils.h"
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
