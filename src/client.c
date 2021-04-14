@@ -18,6 +18,9 @@
 
 void *func_1(void *a) {
     char fifo_name[PATH_MAX];
+	char buf[PATH_MAX];
+	communication(buf, 4, 7, getpid(), pthread_self(), 4);
+	printf("%s", buf);
     get_private_fifo_name(fifo_name, getpid(), pthread_self());
     make_private_fifo(fifo_name);
     delete_private_fifo(fifo_name);
