@@ -3,6 +3,6 @@
 
  typedef enum OPERATION {IWANT, RECVD, TSKEX, TSKDN, GOTRS, LATE2, CLOSD, GAVUP, FAILD} OPERATION;
 
-void op_reg(OPERATION op);
+int op_reg(int i, int t, OPERATION op, int res);
 
 #endif

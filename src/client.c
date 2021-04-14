@@ -3,7 +3,6 @@
 
 int main() {
   OPERATION ot = IWANT;
-  op_reg(ot);
-  printf("hello world!");
+  op_reg(4, 5, ot, 6);
   return 0;
 }
