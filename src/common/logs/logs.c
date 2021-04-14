@@ -13,6 +13,7 @@ int op_reg(int i, int t, OPERATION op, int res){
     time_t inst = time(NULL);
     pid_t pid = getpid();
     pthread_t tid = pthread_self();
+    
     char buf[PATH_MAX];
 
     if(communication(buf, i, t, pid, tid, res, true)!= 0)
