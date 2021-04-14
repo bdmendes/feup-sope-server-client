@@ -1,8 +1,8 @@
 #ifndef OP_REGISTER_H
 #define OP_REGISTER_H
 
-typedef enum operation {IWANT, RECVD, TSKEX, TSKDN, GOTRS, LATE2, CLOSD, GAVUP, FAILD};
+ typedef enum OPERATION {IWANT, RECVD, TSKEX, TSKDN, GOTRS, LATE2, CLOSD, GAVUP, FAILD} OPERATION;
 
-void op_reg(enum operation op);
+void op_reg(OPERATION op);
 
 #endif
