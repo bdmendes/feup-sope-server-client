@@ -1,52 +1,25 @@
 #include "logs.h"
+#include "../utils/utils.h"
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h> 
 #include <pthread.h>
+#include <dirent.h>
+
+static const char* OPERATION_NAME[] = { "IWANT", "RECVD", "TSKEX", "TSKDN", "GOTRS", "2LATE", "CLOSD", "GAVUP", "FAILD" };
 
 int op_reg(int i, int t, OPERATION op, int res){
-    printf("hello");
-    return 0;
-    /*time_t inst = time(NULL);
-    if(t > 9 || t < 1)
-        return -1;
+    time_t inst = time(NULL);
     pid_t pid = getpid();
     pthread_t tid = pthread_self();
-    char buf[6];
-    switch (op) {
-        case IWANT:
-            sprintf(buf, "IWANT");
-            break;
-        case RECVD:
-            sprintf(buf, "RECVD");
-            break;
-        case TSKEX:
-            sprintf(buf, "TSKEX");
-            break;
-        case TSKDN:
-            sprintf(buf, "TSKDN");
-            break;
-        case GOTRS:
-            sprintf(buf, "GOTRS");
-            break;
-        case LATE2:
-            sprintf(buf, "2LATE");
-            break;
-        case CLOSD:
-            sprintf(buf, "CLOSD");
-            break;
-        case GAVUP: 
-            sprintf(buf, "GAVUP");
-            break;
-        case FAILD:
-            sprintf(buf, "FAILD");
-            break;
-        default: 
-            return -1;
-    }
-    printf("%ld ; %d ; %d ; %d ; %ld ; %d ; %s\n", inst, i, t, pid, tid, res, buf);
-    return 0;*/
+    char buf[PATH_MAX];
+
+    if(communication(buf, i, t, pid, tid, res, true)!= 0)
+        return -1;
+
+    printf("%ld ; %s ; %s\n", inst, buf, OPERATION_NAME[op]);
+    return 0;
 };
 
 
