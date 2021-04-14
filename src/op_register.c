@@ -2,14 +2,15 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
-#include <sys/types.h>
+#include <sys/types.h> 
+#include <pthread.h>
 
 int op_reg(int i, int t, OPERATION op, int res){
     time_t inst = time(NULL);
     if(t > 9 || t < 1)
         return -1;
     pid_t pid = getpid();
-    pid_t tid = gettid();
+    pthread_t tid = pthread_self();
     char buf[6];
     switch (op) {
         case IWANT:
@@ -42,7 +43,7 @@ int op_reg(int i, int t, OPERATION op, int res){
         default: 
             return -1;
     }
-    printf("%ld ; %d ; %d ; %d ; %d ; %d ; %s\n", inst, i, t, pid, tid, res, buf);
+    printf("%ld ; %d ; %d ; %d ; %ld ; %d ; %s\n", inst, i, t, pid, tid, res, buf);
     return 0;
 };
 
