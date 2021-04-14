@@ -1,8 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-int make_fifo();
-
-int delete_fifo();
+void get_private_fifo_name(char buf[], int pid, int tid);
 
 #endif
