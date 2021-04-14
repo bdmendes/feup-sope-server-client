@@ -1,4 +1,4 @@
-#include "op_register.h"
+#include "logs.h"
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -6,7 +6,9 @@
 #include <pthread.h>
 
 int op_reg(int i, int t, OPERATION op, int res){
-    time_t inst = time(NULL);
+    printf("hello");
+    return 0;
+    /*time_t inst = time(NULL);
     if(t > 9 || t < 1)
         return -1;
     pid_t pid = getpid();
@@ -44,7 +46,7 @@ int op_reg(int i, int t, OPERATION op, int res){
             return -1;
     }
     printf("%ld ; %d ; %d ; %d ; %ld ; %d ; %s\n", inst, i, t, pid, tid, res, buf);
-    return 0;
+    return 0;*/
 };
 
 
