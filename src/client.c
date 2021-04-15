@@ -1,7 +1,3 @@
-#include "client/fifo/fifo.h"
-#include "client/input_validation/input_validation.h"
-#include "common/logs/logs.h"
-#include "common/utils/utils.h"
 #include <dirent.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -9,6 +5,11 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "client/fifo/fifo.h"
+#include "client/input_validation/input_validation.h"
+#include "common/logs/logs.h"
+#include "common/utils/utils.h"
 
 void *func_1(void *a) {
     OPERATION ot = IWANT;
@@ -24,9 +25,7 @@ int main(int argc, char *argv[]) {
 
     int nsecs = atoi(optarg);
     char fifoname[PATH_MAX];
-    strcpy(fifoname, argv[optind]);
-
-    printf("%d seconds, fifo %s\n", nsecs, fifoname);
+    snprintf(fifoname, PATH_MAX, "%s", argv[optind]);
 
     pthread_t id1;
     if (pthread_create(&id1, NULL, func_1, NULL) != 0)

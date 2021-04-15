@@ -26,4 +26,11 @@
         "input_validation.h": "c",
         "cstdlib": "c"
     },
+    "cpplint.filters": [
+        "-whitespace",
+        "-legal/copyright",
+        "-readability/check",
+        "-build/include_subdir",
+        "-build/header_guard"
+    ],
 }
