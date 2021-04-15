@@ -1,6 +1,3 @@
-#include "client/fifo/fifo.h"
-#include "common/logs/logs.h"
-#include "common/utils/utils.h"
 #include <dirent.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -9,25 +6,27 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "client/fifo/fifo.h"
+#include "client/input_validation/input_validation.h"
+#include "common/logs/logs.h"
+#include "common/utils/utils.h"
+
 void *func_1(void *a) {
-    // test logs
     OPERATION ot = IWANT;
     log_operation(ot, 4, 5, getpid(), pthread_self(), 6);
-
-    /*
-        //teste fifo
-        char fifo_name[PATH_MAX];
-        char buf[PATH_MAX];
-        communication(buf, 4, 7, getpid(), pthread_self(), 4);
-        printf("%s", buf);
-    get_private_fifo_name(fifo_name, getpid(), pthread_self());
-    make_private_fifo(fifo_name);
-    delete_private_fifo(fifo_name);
-    make_private_fifo(fifo_name);*/
     pthread_exit(NULL);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (!valid_client_options(argc, argv)) {
+        fprintf(stderr, "Usage: %s <-t nsecs> <fifoname>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    int nsecs = atoi(optarg);
+    char fifoname[PATH_MAX];
+    snprintf(fifoname, PATH_MAX, "%s", argv[optind]);
+
     pthread_t id1;
     if (pthread_create(&id1, NULL, func_1, NULL) != 0)
         exit(-1);

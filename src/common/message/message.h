@@ -3,8 +3,7 @@
 
 #include <sys/types.h>
 
-typedef struct
-{
+typedef struct {
     int rid;       // request id
     pid_t pid;     // process id
     pthread_t tid; // thread id

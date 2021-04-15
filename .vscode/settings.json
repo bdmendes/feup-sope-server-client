@@ -23,6 +23,14 @@
         "typeinfo": "cpp",
         "stdbool.h": "c",
         "condition_variable": "c",
-        "input_validation.h": "c"
+        "input_validation.h": "c",
+        "cstdlib": "c"
     },
+    "cpplint.filters": [
+        "-whitespace",
+        "-legal/copyright",
+        "-readability/check",
+        "-build/include_subdir",
+        "-build/header_guard"
+    ],
 }
