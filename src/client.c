@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     int nsecs = 0;
     char fifoname[PATH_MAX];
 
-    if (opt != 't' || optind >= argc || argc != 4) {
+    if (opt != 't' || optind >= argc || argc != 4 || !is_all_digits(optarg)) {
         fprintf(stderr, "Usage: %s <-t nsecs> <fifoname>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
