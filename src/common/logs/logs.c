@@ -12,7 +12,7 @@ int log_operation(OPERATION operation, int request_id, int load, pid_t pid,
         return -1;
     }
     time_t inst = time(NULL);
-    printf("%ld ; %d ; %d ; %d ; %ld ; %d ; %s\n", inst, request_id, load, pid,
-           tid, answer, OPERATION_NAME[operation]);
+    printf("%ld; %d; %d; %d; %ld; %d; %s\n", inst, request_id, load, pid, tid,
+           answer, OPERATION_NAME[operation]);
     return 0;
 }

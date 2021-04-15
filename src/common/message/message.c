@@ -1,7 +1,7 @@
 #include "message.h"
 
-int assemble_message(Message *message, const int request_id, const pid_t pid,
-                     const pthread_t tid, const int load, const int answer) {
+int assemble_message(Message *message, const int request_id, const int load,
+                     const pid_t pid, const pthread_t tid, const int answer) {
 
     if (load > 9 || load < 1)
         return -1;
