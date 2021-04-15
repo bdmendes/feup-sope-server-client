@@ -16,7 +16,7 @@ int op_reg(int i, int t, OPERATION op, int res){
     
     char buf[PATH_MAX];
 
-    if(communication(buf, i, t, pid, tid, res, true)!= 0)
+    if(assemble_i_to_res(buf, i, t, pid, tid, res, true)!= 0)
         return -1;
 
     printf("%ld ; %s ; %s\n", inst, buf, OPERATION_NAME[op]);
