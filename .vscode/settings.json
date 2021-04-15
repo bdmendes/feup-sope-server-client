@@ -23,6 +23,7 @@
         "typeinfo": "cpp",
         "stdbool.h": "c",
         "condition_variable": "c",
-        "input_validation.h": "c"
+        "input_validation.h": "c",
+        "cstdlib": "c"
     },
 }

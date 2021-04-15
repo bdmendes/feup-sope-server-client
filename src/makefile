@@ -3,8 +3,8 @@ all: s c
 s: server.o lib.o delay.c delay.h
 	gcc -Wall -DDELAY=0 -o s delay.c lib.o server.o -pthread
 
-c: client.c common/utils.c
-	gcc -Wall -o c client.c common/utils.c client/fifo/fifo.c -pthread
+c: client.c common//utils/utils.c common/logs/logs.c client/input_validation/input_validation.c
+	gcc -Wall -o c client.c common/utils/utils.c common/logs/logs.c client/fifo/fifo.c client/input_validation/input_validation.c -pthread
 
 # server.o: server.c
 # 	gcc -Wall -c -o server.o server.c
