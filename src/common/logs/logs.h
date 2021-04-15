@@ -3,6 +3,6 @@
 
 typedef enum {IWANT, RECVD, TSKEX, TSKDN, GOTRS, TOOLATE, CLOSD, GAVUP, FAILD} OPERATION;
 
-int op_reg(int i, int t, OPERATION op, int res);
+int op_reg(int request_id, int load, OPERATION op, int answer);
 
 #endif
