@@ -1,9 +1,6 @@
 #include "logs.h"
-#include "../utils/utils.h"
-#include <dirent.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>
 
 static const char *OPERATION_NAME[] = {"IWANT", "RECVD", "TSKEX",
                                        "TSKDN", "GOTRS", "2LATE",
@@ -11,13 +8,11 @@ static const char *OPERATION_NAME[] = {"IWANT", "RECVD", "TSKEX",
 
 int log_operation(OPERATION operation, int request_id, int load, pid_t pid,
                   pthread_t tid, int answer) {
-    time_t inst = time(NULL);
-    char buf[PATH_MAX];
-
-    if (assemble_operation_status(buf, request_id, load, pid, tid, answer,
-                                  true) != 0)
+    if (load > 9 || load < 1) {
         return -1;
-
-    printf("%ld ; %s ; %s\n", inst, buf, OPERATION_NAME[operation]);
+    }
+    time_t inst = time(NULL);
+    printf("%ld ; %d ; %d ; %d ; %ld ; %d ; %s\n", inst, request_id, load, pid,
+           tid, answer, OPERATION_NAME[operation]);
     return 0;
-};
+}

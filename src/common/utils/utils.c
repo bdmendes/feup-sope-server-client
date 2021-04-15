@@ -1,21 +1,12 @@
 #include "utils.h"
-#include <dirent.h>
-#include <stdbool.h>
-#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
 
-void get_private_fifo_name(char buf[], pid_t pid, pthread_t tid) {
-    snprintf(buf, PATH_MAX, "/tmp/%d.%ld", pid, tid);
-}
-
-int assemble_operation_status(char buf[], int request_id, int load, pid_t pid,
-                              pthread_t tid, int answer, bool comma) {
-    if (load > 9 || load < 1)
-        return -1;
-    if (comma)
-        snprintf(buf, PATH_MAX, "%d ; %d ; %d ; %ld ; %d", request_id, load,
-                 pid, tid, answer);
-    else
-        snprintf(buf, PATH_MAX, "%d %d %d %ld %d", request_id, load, pid, tid,
-                 answer);
-    return 0;
+bool is_all_digits(char str[]) {
+    for (int i = strlen(str) - 1; i >= 0; i--) {
+        if (!isdigit(str[i])) {
+            return false;
+        }
+    }
+    return true;
 }
