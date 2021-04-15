@@ -15,10 +15,10 @@ jobs:
     - run: make
   
   valgrind:
-    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - run: sudo apt-get install valgrind
+    - run: make
     - run: chmod +x test/valgrind.sh
     - run: ./test/valgrind.sh
