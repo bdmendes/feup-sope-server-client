@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int nsecs = atoi(optarg);
+    // int nsecs = atoi(optarg);
     char fifoname[PATH_MAX];
     snprintf(fifoname, PATH_MAX, "%s", argv[optind]);
 
