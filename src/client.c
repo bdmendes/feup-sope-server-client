@@ -18,7 +18,22 @@ void *func_1(void *a) {
     pthread_exit(NULL);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+
+    int opt = getopt(argc, argv, "t:");
+    int nsecs = 0;
+    char fifoname[PATH_MAX];
+
+    if (opt != 't' || optind >= argc) {
+        fprintf(stderr, "Usage: %s <-t nsecs> <fifoname>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    nsecs = atoi(optarg);
+    strcpy(fifoname, argv[optind]);
+
+    printf("%d seconds, fifo %s\n", nsecs, fifoname);
+
     pthread_t id1;
     if (pthread_create(&id1, NULL, func_1, NULL) != 0)
         exit(-1);
