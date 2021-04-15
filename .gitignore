@@ -1,6 +1,6 @@
 # Main executable
-client/c
-server/s
+src/c
+src/s
 
 # Prerequisites
 *.d
