@@ -21,15 +21,14 @@ void *func_1(void *a) {
 int main(int argc, char *argv[]) {
 
     int opt = getopt(argc, argv, "t:");
-    int nsecs = 0;
-    char fifoname[PATH_MAX];
 
-    if (opt != 't' || optind >= argc || argc != 4 || !is_all_digits(optarg)) {
+    if (opt != 't' || optind != 3 || argc != 4 || !is_all_digits(optarg)) {
         fprintf(stderr, "Usage: %s <-t nsecs> <fifoname>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    nsecs = atoi(optarg);
+    int nsecs = atoi(optarg);
+    char fifoname[PATH_MAX];
     strcpy(fifoname, argv[optind]);
 
     printf("%d seconds, fifo %s\n", nsecs, fifoname);
