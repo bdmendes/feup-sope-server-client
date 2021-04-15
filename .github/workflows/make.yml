@@ -19,4 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: chmod +x test/valgrind.sh && ./test/valgrind.sh
+    - run: sudo apt-get install valgrind
+    - run: chmod +x test/valgrind.sh
+    - run: ./test/valgrind.sh
