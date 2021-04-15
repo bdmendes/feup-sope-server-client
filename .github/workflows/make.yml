@@ -7,10 +7,15 @@ on:
     branches: [ master ]
 
 jobs:
+
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - run: make
+  
+  valgrind:
+    needs: build
+    steps:
+    - uses: actions/checkout@v2
+    - run: chmod +x test/valgrind.sh && ./test/valgrind.sh
