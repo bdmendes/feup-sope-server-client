@@ -1,6 +1,5 @@
-# Main executable
-src/c
-src/s
+# Binary files
+bin/**
 
 # Prerequisites
 *.d
