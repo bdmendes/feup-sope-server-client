@@ -1,6 +1,5 @@
 # Binary files
-bin/s
-bin/c
+bin/**
 
 # Prerequisites
 *.d

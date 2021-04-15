@@ -1,20 +1,32 @@
-COMP := gcc -Wall -Werror -pedantic
+CC=gcc
+CC_FLAGS=-Wall -Werror -pedantic
+LINKED_LIBS=-pthread
 
-BIN_DIR := bin
-SRC_DIR := src
+BIN_DIR=bin
+OBJ_DIR=obj
+SRC_DIR=src
 
-CLIENT_SRC_FILES = client.c common/utils/utils.c common/logs/logs.c client/input_validation/input_validation.c common/message/message.c
-CLIENT_DEPS = 
-CLIENT_SRC_FILES_PREF = $(addprefix ${SRC_DIR}/, ${CLIENT_SRC_FILES})
-CLIENT_DEPS_PREF = $(addprefix ${BIN_DIR}/, ${CLIENT_DEPS})
+CLIENT_NAME = c
+_CLIENT_FILES = client.c common/utils/utils.c common/logs/logs.c client/input_validation/input_validation.c common/message/message.c
+CLIENT_FILES = $(addprefix ${SRC_DIR}/, ${_CLIENT_FILES})
 
-all: bin/s bin/c 
+SERVER_NAME = s
+_SERVER_FILES = server/delay/delay.c
+SERVER_FILES = $(addprefix ${SRC_DIR}/, ${_SERVER_FILES})
+_SERVER_DEPS = server.o lib.o
+SERVER_DEPS = $(addprefix ${OBJ_DIR}/, ${_SERVER_DEPS})
 
-bin/s: bin/server.o bin/lib.o src/delay.c src/delay.h
-	${COMP} -DDELAY=0 -o ${BIN_DIR}/s src/delay.c bin/lib.o bin/server.o -pthread
 
-bin/c: ${CLIENT_SRC_FILES_PREF} ${CLIENT_DEPS_PREF}
-	${COMP} -o ${BIN_DIR}/c ${CLIENT_SRC_FILES_PREF} ${CLIENT_DEPS_PREF} -pthread
+all: ${BIN_DIR} ${BIN_DIR}/${SERVER_NAME} ${BIN_DIR}/${CLIENT_NAME}
+
+${BIN_DIR}:
+	mkdir -p $@
+
+${BIN_DIR}/${SERVER_NAME}: ${SERVER_DEPS} ${SERVER_FILES}
+	${CC} ${CC_FLAGS} -DDELAY=0 -o $@ $^ ${LINKED_LIBS}
+
+${BIN_DIR}/${CLIENT_NAME}: ${CLIENT_FILES}
+	${CC} ${CC_FLAGS} -o $@ $^ ${LINKED_LIBS}
 	
 # server.o: server.c
 # 	gcc -Wall -c -o server.o server.c
@@ -23,4 +35,4 @@ bin/c: ${CLIENT_SRC_FILES_PREF} ${CLIENT_DEPS_PREF}
 # 	gcc -Wall -c -o lib.o lib.c
 
 clean:
-	rm -f ${BIN_DIR}/s ${BIN_DIR}/c
+	rm -f ${BIN_DIR}/${SERVER_NAME} ${BIN_DIR}/${CLIENT_NAME}
