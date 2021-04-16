@@ -27,7 +27,7 @@ void *request_server(void *a) {
     int load = 1 + rand_r(&seed) % 9;
     pthread_t tid = pthread_self();
     pid_t pid = getpid();
-    int rid = tid % pid;
+    int rid = tid;
     if (assemble_message(&msg, rid, load, pid, tid, -1) != 0) {
         return NULL;
     }
