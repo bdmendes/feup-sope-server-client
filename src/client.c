@@ -125,7 +125,6 @@ int main(int argc, char *argv[]) {
             perror("Could not join thread");
         }
     }
-    return 0;
 
     /* Close public fifo */
     if (close(public_fifo_fd) == -1) {
