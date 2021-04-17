@@ -1,16 +1,22 @@
 #include "message.h"
+#include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
 
-int assemble_message(Message *message, const int request_id, const int load,
-                     const pid_t pid, const pthread_t tid, const int answer) {
+static const char *OPERATION_NAME[] = {"IWANT", "RECVD", "TSKEX",
+                                       "TSKDN", "GOTRS", "2LATE",
+                                       "CLOSD", "GAVUP", "FAILD"};
 
-    if (load > 9 || load < 1)
-        return -1;
-
-    message->pid = pid;
+void assemble_message(Message *message, int request_id, int load, int answer) {
+    message->pid = getpid();
+    message->tid = pthread_self();
     message->rid = request_id;
-    message->tid = tid;
     message->tskload = load;
     message->tskres = answer;
+}
 
-    return 0;
+void log_operation(OPERATION operation, int request_id, int load, int answer) {
+    time_t inst = time(NULL);
+    printf("%ld; %d; %d; %d; %ld; %d; %s\n", inst, request_id, load, getpid(),
+           pthread_self(), answer, OPERATION_NAME[operation]);
 }

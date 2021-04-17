@@ -11,7 +11,10 @@ typedef struct {
     int tskres;    // task result
 } Message;
 
-int assemble_message(Message *message, const int request_id, const int load,
-                     const pid_t pid, const pthread_t tid, const int answer);
+typedef enum {IWANT, RECVD, TSKEX, TSKDN, GOTRS, TOOLATE, CLOSD, GAVUP, FAILD} OPERATION;
+
+void assemble_message(Message *message, int request_id, int load, int answer);
+
+void log_operation(OPERATION operation, int request_id, int load, int answer);
 
 #endif
