@@ -40,16 +40,16 @@ void *request_server(void *arg) {
         return NULL;
     }
 
-    /* Request via public fifo */
-    if (write(public_fifo_fd, &sent_msg, sizeof(sent_msg)) == -1) {
-        perror("Could not write to public fifo");
+    int private_fifo_fd = open(private_fifo_name, O_RDONLY | O_NONBLOCK);
+    if (private_fifo_fd == -1) {
+        perror("Could not open private fifo");
         unlink(private_fifo_name);
         return NULL;
     }
 
-    int private_fifo_fd = open(private_fifo_name, O_RDONLY);
-    if (private_fifo_fd == -1) {
-        perror("Could not open private fifo");
+    /* Request via public fifo */
+    if (write(public_fifo_fd, &sent_msg, sizeof(sent_msg)) == -1) {
+        perror("Could not write to public fifo");
         unlink(private_fifo_name);
         return NULL;
     }
@@ -129,6 +129,8 @@ int main(int argc, char *argv[]) {
         }
         pthread_attr_destroy(&tatrr);
         int delay = rand_r(&seed);
-        usleep(1000 + delay % 20000);
+        usleep(1000 + delay % 50000);
     }
+
+    pthread_exit(NULL);
 }
