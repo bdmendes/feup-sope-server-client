@@ -7,7 +7,7 @@
 
 #define BUSY_WAIT_DELAY_MICROS 20000
 
-void start_timer(unsigned long seconds);
+void setup_timer(unsigned long seconds);
 
 void get_timer_remaining_time(struct timeval *timeval);
 

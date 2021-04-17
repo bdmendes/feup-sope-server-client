@@ -22,6 +22,7 @@ static int public_fifo_fd = -1;
 typedef struct {
     int load;
     int rid;
+    struct timeval private_fifo_timeout;
 } Request;
 
 void *request_server(void *arg) {
@@ -88,7 +89,7 @@ int main(int argc, char *argv[]) {
     }
 
     int nsecs = atoi(optarg);
-    start_timer(nsecs);
+    setup_timer(nsecs);
 
     snprintf(public_fifo_name, PATH_MAX, "%s", argv[optind]);
 
@@ -102,20 +103,30 @@ int main(int argc, char *argv[]) {
     }
 
     pthread_t id;
-    int counter = 0;
+    int request_counter = 0;
     unsigned int seed = time(NULL);
     for (;;) {
         Request request;
         request.load = 1 + rand_r(&seed) % 9;
-        request.rid = counter++;
-        if (pthread_create(&id, NULL, request_server, (void *)&request) != 0) {
+        request.rid = request_counter++;
+        struct timeval private_fifo_timeout;
+        get_timer_remaining_time(&private_fifo_timeout);
+        request.private_fifo_timeout = private_fifo_timeout;
+        printf("remaining time: %lu seconds, %lu us\n",
+               private_fifo_timeout.tv_sec, private_fifo_timeout.tv_usec);
+        pthread_attr_t tatrr;
+        pthread_attr_init(&tatrr);
+        pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED);
+        if (pthread_create(&id, &tatrr, request_server, (void *)&request) !=
+            0) {
             perror("Could not create thread");
         }
-        pthread_detach(id);
+        pthread_attr_destroy(&tatrr);
         if (timer_runout())
             break;
         int delay = rand_r(&seed);
-        usleep(1000 + delay % 9000);
+        usleep(100000 + delay % 9000);
     }
-    pthread_exit(NULL); // don't kill detached threads
+
+    pthread_exit(NULL); // do not kill detached threads
 }
