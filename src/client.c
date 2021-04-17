@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -58,16 +59,24 @@ void *request_server(void *arg) {
 
     /* Read server response from private fifo */
     Message received_msg;
-    if (read(private_fifo_fd, &received_msg, sizeof(Message)) == -1) {
-        perror("Could not read from private fifo");
-        close(private_fifo_fd);
-        unlink(private_fifo_name);
+    fd_set set;
+    FD_ZERO(&set);
+    FD_SET(private_fifo_fd, &set);
+    int s = select(private_fifo_fd + 1, &set, NULL, NULL,
+                   &request.private_fifo_timeout);
+    if (s == -1) {
+        perror("Could not wait for private fifo read");
         return NULL;
+    } else if (s == 0) {
+        log_operation(GAVUP, request.rid, request.load, -1);
+    } else {
+        if (read(private_fifo_fd, &received_msg, sizeof(Message)) == -1) {
+            perror("Could not read from private fifo");
+        } else {
+            log_operation(received_msg.tskres == -1 ? CLOSD : GOTRS,
+                          request.rid, request.load, received_msg.tskres);
+        }
     }
-
-    /* Log server response */
-    log_operation(received_msg.tskres == -1 ? CLOSD : GOTRS, request.rid,
-                  request.load, received_msg.tskres);
 
     /* Close and remove private fifo */
     if (close(private_fifo_fd) == -1) {
@@ -91,9 +100,8 @@ int main(int argc, char *argv[]) {
     int nsecs = atoi(optarg);
     setup_timer(nsecs);
 
-    snprintf(public_fifo_name, PATH_MAX, "%s", argv[optind]);
-
     /* Open public fifo for writing */
+    snprintf(public_fifo_name, PATH_MAX, "%s", argv[optind]);
     while ((public_fifo_fd = open(public_fifo_name, O_WRONLY)) == -1) {
         if (timer_runout()) {
             fprintf(stderr, "Could not open public fifo\n");
@@ -105,15 +113,13 @@ int main(int argc, char *argv[]) {
     pthread_t id;
     int request_counter = 0;
     unsigned int seed = time(NULL);
-    for (;;) {
+    while (!timer_runout()) {
         Request request;
         request.load = 1 + rand_r(&seed) % 9;
         request.rid = request_counter++;
         struct timeval private_fifo_timeout;
         get_timer_remaining_time(&private_fifo_timeout);
         request.private_fifo_timeout = private_fifo_timeout;
-        printf("remaining time: %lu seconds, %lu us\n",
-               private_fifo_timeout.tv_sec, private_fifo_timeout.tv_usec);
         pthread_attr_t tatrr;
         pthread_attr_init(&tatrr);
         pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED);
@@ -122,11 +128,7 @@ int main(int argc, char *argv[]) {
             perror("Could not create thread");
         }
         pthread_attr_destroy(&tatrr);
-        if (timer_runout())
-            break;
         int delay = rand_r(&seed);
-        usleep(100000 + delay % 9000);
+        usleep(1000 + delay % 20000);
     }
-
-    pthread_exit(NULL); // do not kill detached threads
 }
