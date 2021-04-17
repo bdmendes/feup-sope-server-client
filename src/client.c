@@ -13,6 +13,7 @@
 #include "client/input_validation/input_validation.h"
 #include "common/fifo/fifo.h"
 #include "common/message/message.h"
+#include "common/timer/timer.h"
 #include "common/utils/utils.h"
 
 static char public_fifo_name[PATH_MAX];
@@ -86,14 +87,18 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // int nsecs = atoi(optarg);
+    int nsecs = atoi(optarg);
+    start_timer(nsecs);
+
     snprintf(public_fifo_name, PATH_MAX, "%s", argv[optind]);
 
     /* Open public fifo for writing */
-    public_fifo_fd = open(public_fifo_name, O_WRONLY);
-    if (public_fifo_fd == -1) {
-        perror("Could not open public fifo");
-        exit(EXIT_FAILURE);
+    while ((public_fifo_fd = open(public_fifo_name, O_WRONLY)) == -1) {
+        if (get_timer_remaining_seconds() == 0) {
+            fprintf(stderr, "Could not open public fifo\n");
+            exit(EXIT_FAILURE);
+        }
+        usleep(BUSY_WAIT_DELAY_MICROS);
     }
 
     // NOT HANDLING TIMEOUT YET
