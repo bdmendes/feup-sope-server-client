@@ -94,36 +94,28 @@ int main(int argc, char *argv[]) {
 
     /* Open public fifo for writing */
     while ((public_fifo_fd = open(public_fifo_name, O_WRONLY)) == -1) {
-        if (get_timer_remaining_seconds() == 0) {
+        if (timer_runout()) {
             fprintf(stderr, "Could not open public fifo\n");
             exit(EXIT_FAILURE);
         }
         usleep(BUSY_WAIT_DELAY_MICROS);
     }
 
-    // NOT HANDLING TIMEOUT YET
-    pthread_t id[10];
+    pthread_t id;
+    int counter = 0;
     unsigned int seed = time(NULL);
-    for (int i = 0; i < 10; i++) {
+    for (;;) {
         Request request;
         request.load = 1 + rand_r(&seed) % 9;
-        request.rid = i;
-        if (pthread_create(&id[i], NULL, request_server, (void *)&request) !=
-            0) {
+        request.rid = counter++;
+        if (pthread_create(&id, NULL, request_server, (void *)&request) != 0) {
             perror("Could not create thread");
         }
+        pthread_detach(id);
+        if (timer_runout())
+            break;
         int delay = rand_r(&seed);
         usleep(1000 + delay % 9000);
     }
-    for (int i = 0; i < 10; i++) {
-        if (pthread_join(id[i], NULL) != 0) {
-            perror("Could not join thread");
-        }
-    }
-
-    /* Close public fifo */
-    if (close(public_fifo_fd) == -1) {
-        perror("Could not close private fifo");
-        exit(EXIT_FAILURE);
-    }
+    pthread_exit(NULL); // don't kill detached threads
 }

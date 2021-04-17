@@ -24,7 +24,11 @@
         "stdbool.h": "c",
         "condition_variable": "c",
         "input_validation.h": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "chrono": "c",
+        "future": "c",
+        "thread": "c",
+        "variant": "c"
     },
     "cpplint.filters": [
         "-whitespace",

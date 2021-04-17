@@ -3,11 +3,14 @@
 
 #include <stdbool.h>
 #include <time.h>
+#include <sys/time.h>
 
 #define BUSY_WAIT_DELAY_MICROS 20000
 
-void start_timer(time_t seconds);
+void start_timer(unsigned long seconds);
 
-time_t get_timer_remaining_seconds();
+void get_timer_remaining_time(struct timeval *timeval);
+
+bool timer_runout();
 
 #endif
