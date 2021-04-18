@@ -1,6 +1,6 @@
 CC=gcc
 CC_FLAGS=-Wall -Werror -pedantic
-LINKED_LIBS=-pthread
+LINKED_LIBS=-pthread -lrt
 
 BIN_DIR=bin
 OBJ_DIR=obj

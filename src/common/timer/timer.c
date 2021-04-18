@@ -1,54 +1,54 @@
 #include "timer.h"
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
-static struct timeval initial_instant;
-static time_t duration_seconds = 0;
-static bool runout = false;
 static bool timer_set = false;
+static timer_t timerid;
 
-static void alarm_handler() {
-    runout = true;
-}
+int setup_timer(unsigned long seconds) {
+    struct sigevent sev;
+    struct itimerspec its;
 
-void setup_timer(unsigned long seconds) {
-    gettimeofday(&initial_instant, NULL);
+    /* Create the timer */
+    sev.sigev_notify = SIGEV_NONE;
+    sev.sigev_value.sival_ptr = &timerid;
+    if (timer_create(CLOCK_MONOTONIC, &sev, &timerid) == -1) {
+        perror("Could not create timer");
+        return -1;
+    }
+
+    /* Set expiration time and one shot behavior */
+    its.it_value.tv_sec = seconds;
+    its.it_value.tv_nsec = 0;
+    its.it_interval.tv_sec = 0;
+    its.it_interval.tv_nsec = 0;
+    if (timer_settime(timerid, 0, &its, NULL) == -1) {
+        perror("Could not set timer time");
+        return -1;
+    }
+
     timer_set = true;
-    runout = false;
-    duration_seconds = seconds;
-
-    struct sigaction sig;
-    memset(&sig, 0, sizeof(struct sigaction));
-    sig.sa_flags = SA_RESTART; // make sure all resources are freed
-    sig.sa_handler = alarm_handler;
-    sigemptyset(&sig.sa_mask);
-    sigaction(SIGALRM, &sig, NULL);
-
-    alarm(seconds);
+    return 0;
 }
 
-void get_timer_remaining_time(struct timeval *timeval) {
+int get_timer_remaining_time(struct timespec *time) {
     if (!timer_set) {
         fprintf(stderr, "Timer is unset");
-        return;
+        return -1;
     }
-    if (runout) {
-        timeval->tv_sec = 0;
-        timeval->tv_usec = 0;
-    } else {
-        struct timeval curr_instant;
-        gettimeofday(&curr_instant, NULL);
-        timeval->tv_sec =
-            duration_seconds > curr_instant.tv_sec - initial_instant.tv_sec
-                ? duration_seconds -
-                      (curr_instant.tv_sec - initial_instant.tv_sec)
-                : 0;
-        timeval->tv_usec = 1e6 - curr_instant.tv_usec;
+    struct itimerspec its;
+    if (timer_gettime(timerid, &its) == -1) {
+        perror("Could not get timer remaining time");
+        return -1;
     }
+    time->tv_sec = its.it_value.tv_sec;
+    time->tv_nsec = its.it_value.tv_nsec;
+    return 0;
 }
 
-bool timer_runout() {
-    return timer_set && runout;
+bool time_is_up(const struct timespec *time) {
+    return time->tv_sec == 0 && time->tv_nsec == 0;
 }
