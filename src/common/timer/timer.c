@@ -36,7 +36,7 @@ void get_timer_remaining_time(struct timeval *timeval) {
     }
     if (runout) {
         timeval->tv_sec = 0;
-        timeval->tv_usec = BUSY_WAIT_DELAY_MICROS;
+        timeval->tv_usec = 0;
     } else {
         struct timeval curr_instant;
         gettimeofday(&curr_instant, NULL);
