@@ -111,6 +111,9 @@ int main(int argc, char *argv[]) {
     }
 
     pthread_t id;
+    pthread_attr_t tatrr;
+    pthread_attr_init(&tatrr);
+    pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED);
     int request_counter = 0;
     unsigned int seed = time(NULL);
     while (!timer_runout()) {
@@ -120,17 +123,14 @@ int main(int argc, char *argv[]) {
         struct timeval private_fifo_timeout;
         get_timer_remaining_time(&private_fifo_timeout);
         request.private_fifo_timeout = private_fifo_timeout;
-        pthread_attr_t tatrr;
-        pthread_attr_init(&tatrr);
-        pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED);
         if (pthread_create(&id, &tatrr, request_server, (void *)&request) !=
             0) {
             perror("Could not create thread");
         }
-        pthread_attr_destroy(&tatrr);
         int delay = rand_r(&seed);
         usleep(1000 + delay % 50000);
     }
+    pthread_attr_destroy(&tatrr);
 
     pthread_exit(NULL);
 }
