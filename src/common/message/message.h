@@ -11,6 +11,6 @@ typedef struct {
     int tskres;    // task result
 } Message;
 
-int assemble_message(Message *message, const int request_id, const pid_t pid, const pthread_t tid, int load, int answer);
+void assemble_message(Message *message, int request_id, int load, int answer);
 
 #endif

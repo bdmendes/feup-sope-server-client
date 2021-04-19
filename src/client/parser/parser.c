@@ -1,7 +1,7 @@
+#include "parser.h"
 #include <unistd.h>
 
 #include "../../common/utils/utils.h"
-#include "input_validation.h"
 
 bool valid_client_options(int argc, char **argv) {
     if (argc != 4)

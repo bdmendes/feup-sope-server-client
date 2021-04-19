@@ -1,16 +1,12 @@
 #include "message.h"
+#include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
 
-int assemble_message(Message *message, const int request_id, const pid_t pid,
-                     const pthread_t tid, const int load, const int answer) {
-
-    if (load > 9 || load < 1)
-        return -1;
-
-    message->pid = pid;
+void assemble_message(Message *message, int request_id, int load, int answer) {
+    message->pid = getpid();
+    message->tid = pthread_self();
     message->rid = request_id;
-    message->tid = tid;
     message->tskload = load;
     message->tskres = answer;
-
-    return 0;
 }
