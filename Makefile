@@ -7,7 +7,7 @@ OBJ_DIR=obj
 SRC_DIR=src
 
 CLIENT_NAME = c
-_CLIENT_FILES = client.c common/utils/utils.c client/input_validation/input_validation.c common/message/message.c common/fifo/fifo.c common/timer/timer.c
+_CLIENT_FILES = client.c common/utils/utils.c client/parser/parser.c common/message/message.c common/fifo/fifo.c common/timer/timer.c common/log/log.c
 CLIENT_FILES = $(addprefix ${SRC_DIR}/, ${_CLIENT_FILES})
 
 SERVER_NAME = s

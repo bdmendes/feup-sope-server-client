@@ -11,10 +11,6 @@ typedef struct {
     int tskres;    // task result
 } Message;
 
-typedef enum {IWANT, RECVD, TSKEX, TSKDN, GOTRS, TOOLATE, CLOSD, GAVUP, FAILD} OPERATION;
-
 void assemble_message(Message *message, int request_id, int load, int answer);
-
-void log_operation(OPERATION operation, int request_id, int load, int answer);
 
 #endif

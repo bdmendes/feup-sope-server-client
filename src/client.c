@@ -11,8 +11,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "client/input_validation/input_validation.h"
+#include "client/parser/parser.h"
 #include "common/fifo/fifo.h"
+#include "common/log/log.h"
 #include "common/message/message.h"
 #include "common/timer/timer.h"
 #include "common/utils/utils.h"
@@ -34,7 +35,7 @@ void *request_server(void *arg) {
 
     /* Make private fifo */
     char private_fifo_name[PATH_MAX];
-    get_private_fifo_name(private_fifo_name);
+    get_private_fifo_name(private_fifo_name, getpid(), pthread_self());
     if (mkfifo(private_fifo_name, S_IRWXU | S_IRWXG | S_IRWXO) == -1) {
         perror("Could not make private fifo");
         return NULL;
