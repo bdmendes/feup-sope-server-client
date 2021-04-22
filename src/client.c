@@ -20,6 +20,7 @@
 
 static char public_fifo_name[PATH_MAX];
 static int public_fifo_fd = -1;
+static volatile bool is_server_closed = false;
 
 typedef struct {
     int load;
@@ -73,8 +74,15 @@ void *request_server(void *arg) {
         if (read(private_fifo_fd, &received_msg, sizeof(Message)) == -1) {
             perror("Could not read from private fifo");
         } else {
-            log_operation(received_msg.tskres == -1 ? CLOSD : GOTRS,
-                          request.rid, request.load, received_msg.tskres);
+            OPERATION response;
+            if (received_msg.tskres == -1) {
+                is_server_closed = true;
+                response = CLOSD;
+            } else {
+                response = GOTRS;
+            }
+            log_operation(response, request.rid, request.load,
+                          received_msg.tskres);
         }
     }
 
@@ -123,7 +131,7 @@ int main(int argc, char *argv[]) {
     pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED);
     int request_counter = 0;
     unsigned int seed = time(NULL);
-    for (;;) {
+    while (!is_server_closed) {
         Request request;
         request.load = 1 + rand_r(&seed) % 9;
         request.rid = request_counter++;
