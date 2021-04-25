@@ -1,5 +1,4 @@
 #include <dirent.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <pthread.h>
@@ -20,7 +19,7 @@
 
 static char public_fifo_name[PATH_MAX];
 static int public_fifo_fd = -1;
-static volatile bool is_server_closed = false;
+static volatile bool server_closed = false;
 
 typedef struct {
     int load;
@@ -39,24 +38,24 @@ void *request_server(void *arg) {
     get_private_fifo_name(private_fifo_name, getpid(), pthread_self());
     if (mkfifo(private_fifo_name, S_IRWXU | S_IRWXG | S_IRWXO) == -1) {
         perror("Could not make private fifo");
-        return NULL;
+        pthread_exit(NULL);
     }
 
+    /* Open private fifo for reading */
     int private_fifo_fd = open(private_fifo_name, O_RDONLY | O_NONBLOCK);
     if (private_fifo_fd == -1) {
         perror("Could not open private fifo");
         unlink(private_fifo_name);
-        return NULL;
+        pthread_exit(NULL);
     }
 
-    /* Request via public fifo */
+    /* Write request to public fifo */
     if (write(public_fifo_fd, &sent_msg, sizeof(sent_msg)) == -1) {
         perror("Could not write to public fifo");
+        close(private_fifo_fd);
         unlink(private_fifo_name);
-        return NULL;
+        pthread_exit(NULL);
     }
-
-    /* Log request */
     log_operation(IWANT, request.rid, request.load, -1);
 
     /* Read server response from private fifo */
@@ -64,24 +63,25 @@ void *request_server(void *arg) {
     fd_set set;
     FD_ZERO(&set);
     FD_SET(private_fifo_fd, &set);
-    int read_bytes = pselect(private_fifo_fd + 1, &set, NULL, NULL,
-                             &request.private_fifo_timeout, NULL);
-    if (read_bytes == -1) {
+    int ready_fds = pselect(private_fifo_fd + 1, &set, NULL, NULL,
+                            &request.private_fifo_timeout, NULL);
+    if (ready_fds == -1) {
         perror("Could not wait for private fifo read");
-    } else if (read_bytes == 0) {
+    } else if (ready_fds == 0) {
         log_operation(GAVUP, request.rid, request.load, -1);
     } else {
-        if (read(private_fifo_fd, &received_msg, sizeof(Message)) == -1) {
-            perror("Could not read from private fifo");
+        if (read(private_fifo_fd, &received_msg, sizeof(Message)) !=
+            sizeof(Message)) {
+            perror("Could not read message from private fifo");
         } else {
-            OPERATION response;
+            OPERATION operation;
             if (received_msg.tskres == -1) {
-                is_server_closed = true;
-                response = CLOSD;
+                server_closed = true;
+                operation = CLOSD;
             } else {
-                response = GOTRS;
+                operation = GOTRS;
             }
-            log_operation(response, request.rid, request.load,
+            log_operation(operation, request.rid, request.load,
                           received_msg.tskres);
         }
     }
@@ -89,14 +89,14 @@ void *request_server(void *arg) {
     /* Close and remove private fifo */
     if (close(private_fifo_fd) == -1) {
         perror("Could not close private fifo");
-        return NULL;
+        pthread_exit(NULL);
     }
     if (unlink(private_fifo_name) == -1) {
         perror("Could not remove private fifo");
-        return NULL;
+        pthread_exit(NULL);
     }
 
-    return NULL;
+    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]) {
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 
     int nsecs = atoi(optarg);
     if (setup_timer(nsecs) == -1) {
-        fprintf(stderr, "Could not set timeout mechanism");
+        fprintf(stderr, "Could not set timeout mechanism\n");
         exit(EXIT_FAILURE);
     }
     struct timespec remaining_time;
@@ -116,13 +116,14 @@ int main(int argc, char *argv[]) {
     snprintf(public_fifo_name, PATH_MAX, "%s", argv[optind]);
     while ((public_fifo_fd = open(public_fifo_name, O_WRONLY)) == -1) {
         if (get_timer_remaining_time(&remaining_time) == -1) {
-            fprintf(stderr, "Could not wait for public fifo opening");
+            fprintf(stderr, "Could not wait for public fifo opening\n");
             exit(EXIT_FAILURE);
         }
         if (time_is_up(&remaining_time)) {
-            fprintf(stderr, "Could not open public fifo\n");
+            fprintf(stderr, "Could not open public fifo: Timeout\n");
             exit(EXIT_FAILURE);
         }
+        usleep(BUSY_WAIT_DELAY_MICROS);
     }
 
     pthread_t id;
@@ -131,12 +132,12 @@ int main(int argc, char *argv[]) {
     pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED);
     int request_counter = 0;
     unsigned int seed = time(NULL);
-    while (!is_server_closed) {
+    while (!server_closed) {
         Request request;
         request.load = 1 + rand_r(&seed) % 9;
         request.rid = request_counter++;
         if (get_timer_remaining_time(&remaining_time) == -1) {
-            fprintf(stderr, "Could not set private fifo read timeout");
+            fprintf(stderr, "Could not set private fifo read timeout\n");
         } else {
             if (time_is_up(&remaining_time)) {
                 break;
