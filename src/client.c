@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
     struct timespec remaining_time;
 
     /* Open public fifo for writing */
-    snprintf(public_fifo_name, PATH_MAX, "%s", argv[optind]);
+    snprintf(public_fifo_name, PATH_MAX, "%s", argv[3]);
     while ((public_fifo_fd = open(public_fifo_name, O_WRONLY)) == -1) {
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not wait for public fifo opening\n");
