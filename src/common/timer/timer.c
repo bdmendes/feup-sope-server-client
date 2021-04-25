@@ -13,6 +13,7 @@ int setup_timer(unsigned long seconds) {
     struct itimerspec its;
 
     /* Create the timer */
+    memset(&sev, 0, sizeof(struct sigevent));
     sev.sigev_notify = SIGEV_NONE;
     sev.sigev_value.sival_ptr = &timerid;
     if (timer_create(CLOCK_MONOTONIC, &sev, &timerid) == -1) {
