@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int nsecs = atoi(optarg);
+    int nsecs = atoi(argv[2]);
     if (setup_timer(nsecs) == -1) {
         exit(EXIT_FAILURE);
     }
