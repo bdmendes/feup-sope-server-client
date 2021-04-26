@@ -17,7 +17,6 @@
 #include "common/timer/timer.h"
 #include "common/utils/utils.h"
 
-static char public_fifo_name[PATH_MAX];
 static int public_fifo_fd = -1;
 static volatile bool server_closed = false;
 
@@ -28,9 +27,6 @@ typedef struct {
 } Request;
 
 void thread_free_request(void *request) {
-    if (request == NULL) {
-        perror("thread free");
-    }
     free(request);
 }
 
@@ -53,7 +49,6 @@ void *request_server(void *arg) {
     Message sent_msg;
     Request *request = (Request *)arg;
     assemble_message(&sent_msg, request->rid, request->load, -1);
-
     pthread_cleanup_push(thread_free_request, (void *)request);
 
     /* Make private fifo */
@@ -63,7 +58,6 @@ void *request_server(void *arg) {
         perror("Could not make private fifo");
         pthread_exit(NULL);
     }
-
     pthread_cleanup_push(thread_unlink_fifo, (void *)private_fifo_name);
 
     /* Open private fifo for reading */
@@ -72,7 +66,6 @@ void *request_server(void *arg) {
         perror("Could not open private fifo");
         pthread_exit(NULL);
     }
-
     pthread_cleanup_push(thread_close_fifo, (void *)&private_fifo_fd);
 
     /* Write request to public fifo */
@@ -113,37 +106,34 @@ void *request_server(void *arg) {
     pthread_cleanup_pop(1);
     pthread_cleanup_pop(1);
     pthread_cleanup_pop(1);
-
     pthread_exit(NULL);
 }
 
-int main(int argc, char *argv[]) {
-    if (!valid_client_options(argc, argv)) {
-        fprintf(stderr, "Usage: %s <-t nsecs> <fifoname>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-
-    int nsecs = atoi(optarg);
-    if (setup_timer(nsecs) == -1) {
-        fprintf(stderr, "Could not set timeout mechanism\n");
-        exit(EXIT_FAILURE);
-    }
+int open_public_fifo(char public_fifo_name[]) {
     struct timespec remaining_time;
-
-    /* Open public fifo for writing */
-    snprintf(public_fifo_name, PATH_MAX, "%s", argv[3]);
-    while ((public_fifo_fd = open(public_fifo_name, O_WRONLY)) == -1) {
+    while ((public_fifo_fd = open(public_fifo_name, O_WRONLY | O_CLOEXEC)) ==
+           -1) {
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not wait for public fifo opening\n");
-            exit(EXIT_FAILURE);
+            return -1;
         }
         if (time_is_up(&remaining_time)) {
             fprintf(stderr, "Could not open public fifo: Timeout\n");
-            exit(EXIT_FAILURE);
+            return -1;
         }
         usleep(BUSY_WAIT_DELAY_MICROS);
     }
+    return 0;
+}
 
+void close_public_fifo() {
+    if (close(public_fifo_fd) == -1) {
+        perror("Could not close public fifo");
+    }
+}
+
+void spawn_request_threads() {
+    struct timespec remaining_time;
     pthread_t id;
     pthread_attr_t tatrr;
     pthread_attr_init(&tatrr);
@@ -170,6 +160,25 @@ int main(int argc, char *argv[]) {
         usleep(10000 + delay % 40000);
     }
     pthread_attr_destroy(&tatrr);
+}
 
+int main(int argc, char *argv[]) {
+    if (!valid_client_options(argc, argv)) {
+        fprintf(stderr, "Usage: %s <-t nsecs> <fifoname>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    int nsecs = atoi(argv[2]);
+    if (setup_timer(nsecs) == -1) {
+        exit(EXIT_FAILURE);
+    }
+
+    if (open_public_fifo(argv[3]) == -1) {
+        exit(EXIT_FAILURE);
+    }
+
+    spawn_request_threads();
+
+    atexit(close_public_fifo);
     pthread_exit(NULL);
 }
