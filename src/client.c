@@ -17,7 +17,6 @@
 #include "common/timer/timer.h"
 #include "common/utils/utils.h"
 
-static char public_fifo_name[PATH_MAX];
 static int public_fifo_fd = -1;
 static volatile bool server_closed = false;
 
@@ -110,7 +109,7 @@ void *request_server(void *arg) {
     pthread_exit(NULL);
 }
 
-int open_public_fifo() {
+int open_public_fifo(char public_fifo_name[]) {
     struct timespec remaining_time;
     while ((public_fifo_fd = open(public_fifo_name, O_WRONLY | O_CLOEXEC)) ==
            -1) {
@@ -174,8 +173,9 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    char public_fifo_name[PATH_MAX];
     snprintf(public_fifo_name, PATH_MAX, "%s", argv[3]);
-    if (open_public_fifo() == -1) {
+    if (open_public_fifo(public_fifo_name) == -1) {
         exit(EXIT_FAILURE);
     }
 
