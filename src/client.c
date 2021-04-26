@@ -173,9 +173,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    char public_fifo_name[PATH_MAX];
-    snprintf(public_fifo_name, PATH_MAX, "%s", argv[3]);
-    if (open_public_fifo(public_fifo_name) == -1) {
+    if (open_public_fifo(argv[3]) == -1) {
         exit(EXIT_FAILURE);
     }
 
