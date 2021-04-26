@@ -112,7 +112,8 @@ void *request_server(void *arg) {
 
 int open_public_fifo() {
     struct timespec remaining_time;
-    while ((public_fifo_fd = open(public_fifo_name, O_WRONLY)) == -1) {
+    while ((public_fifo_fd = open(public_fifo_name, O_WRONLY | O_CLOEXEC)) ==
+           -1) {
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not wait for public fifo opening\n");
             return -1;
