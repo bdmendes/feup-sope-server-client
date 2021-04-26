@@ -117,6 +117,12 @@ void *request_server(void *arg) {
     pthread_exit(NULL);
 }
 
+void close_public_fifo() {
+    if (close(public_fifo_fd) == -1) {
+        perror("Could not close public fifo");
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (!valid_client_options(argc, argv)) {
         fprintf(stderr, "Usage: %s <-t nsecs> <fifoname>\n", argv[0]);
@@ -171,5 +177,6 @@ int main(int argc, char *argv[]) {
     }
     pthread_attr_destroy(&tatrr);
 
+    atexit(close_public_fifo);
     pthread_exit(NULL);
 }
