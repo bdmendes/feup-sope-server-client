@@ -10,6 +10,6 @@ static const char *OPERATION_NAME[] = {"IWANT", "RECVD", "TSKEX",
 
 void log_operation(OPERATION operation, int request_id, int load, int answer) {
     time_t inst = time(NULL);
-    printf("%ld; %d; %d; %d; %ld; %d; %s\n", inst, request_id, load, getpid(),
+    printf("%ld ; %d ; %d ; %d ; %ld ; %d ; %s\n", inst, request_id, load, getpid(),
            pthread_self(), answer, OPERATION_NAME[operation]);
 }
