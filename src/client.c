@@ -1,113 +1,14 @@
-#include <dirent.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/select.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "client/parser/parser.h"
-#include "common/fifo/fifo.h"
-#include "common/log/log.h"
-#include "common/message/message.h"
+#include "client/request/request.h"
 #include "common/timer/timer.h"
-#include "common/utils/utils.h"
 
 static int public_fifo_fd = -1;
-static volatile bool server_closed = false;
-
-typedef struct {
-    int load;
-    int rid;
-    struct timespec private_fifo_timeout;
-} Request;
-
-void thread_free_request(void *request) {
-    free(request);
-}
-
-void thread_unlink_fifo(void *fifo_name) {
-    char *fifo_name_ptr = (char *)fifo_name;
-    if (unlink(fifo_name_ptr) == -1) {
-        perror("thread unlink");
-    }
-}
-
-void thread_close_fifo(void *fd) {
-    int fifo_fd = *((int *)fd);
-    if (close(fifo_fd) == -1) {
-        perror("thread close");
-    }
-}
-
-void *request_server(void *arg) {
-    /* Assemble message to send */
-    Message sent_msg;
-    Request *request = (Request *)arg;
-    assemble_message(&sent_msg, request->rid, request->load, -1);
-    pthread_cleanup_push(thread_free_request, (void *)request);
-
-    /* Make private fifo */
-    char private_fifo_name[PATH_MAX];
-    get_private_fifo_name(private_fifo_name, getpid(), pthread_self());
-    if (mkfifo(private_fifo_name, S_IRWXU | S_IRWXG | S_IRWXO) == -1) {
-        perror("Could not make private fifo");
-        pthread_exit(NULL);
-    }
-    pthread_cleanup_push(thread_unlink_fifo, (void *)private_fifo_name);
-
-    /* Open private fifo for reading */
-    int private_fifo_fd = open(private_fifo_name, O_RDONLY | O_NONBLOCK);
-    if (private_fifo_fd == -1) {
-        perror("Could not open private fifo");
-        pthread_exit(NULL);
-    }
-    pthread_cleanup_push(thread_close_fifo, (void *)&private_fifo_fd);
-
-    /* Write request to public fifo */
-    if (write(public_fifo_fd, &sent_msg, sizeof(sent_msg)) == -1) {
-        perror("Could not write to public fifo");
-        pthread_exit(NULL);
-    }
-    log_operation(IWANT, request->rid, request->load, -1);
-
-    /* Read server response from private fifo */
-    Message received_msg;
-    fd_set set;
-    FD_ZERO(&set);
-    FD_SET(private_fifo_fd, &set);
-    int ready_fds = pselect(private_fifo_fd + 1, &set, NULL, NULL,
-                            &request->private_fifo_timeout, NULL);
-    if (ready_fds == -1) {
-        perror("Could not wait for private fifo read");
-    } else if (ready_fds == 0) {
-        log_operation(GAVUP, request->rid, request->load, -1);
-    } else {
-        if (read(private_fifo_fd, &received_msg, sizeof(Message)) !=
-            sizeof(Message)) {
-            perror("Could not read message from private fifo");
-        } else {
-            OPERATION operation;
-            if (received_msg.tskres == -1) {
-                server_closed = true;
-                operation = CLOSD;
-            } else {
-                operation = GOTRS;
-            }
-            log_operation(operation, request->rid, request->load,
-                          received_msg.tskres);
-        }
-    }
-
-    pthread_cleanup_pop(1);
-    pthread_cleanup_pop(1);
-    pthread_cleanup_pop(1);
-    pthread_exit(NULL);
-}
 
 int open_public_fifo(char public_fifo_name[]) {
     struct timespec remaining_time;
@@ -140,10 +41,11 @@ void spawn_request_threads() {
     pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED);
     int request_counter = 0;
     unsigned int seed = time(NULL);
-    while (!server_closed) {
+    while (!is_server_closed()) {
         Request *request = (Request *)malloc(sizeof(Request));
         request->load = 1 + rand_r(&seed) % 9;
         request->rid = request_counter++;
+        request->public_fifo_fd = public_fifo_fd;
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not set private fifo read timeout\n");
         } else {

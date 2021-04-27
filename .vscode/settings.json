@@ -28,7 +28,9 @@
         "chrono": "c",
         "future": "c",
         "thread": "c",
-        "variant": "c"
+        "variant": "c",
+        "fifo.h": "c",
+        "request.h": "c"
     },
     "cpplint.filters": [
         "-whitespace",
