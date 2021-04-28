@@ -17,10 +17,20 @@ bool is_server_closed(){
     return server_closed;
 }
 
+/**
+ * @brief Free the request
+ * 
+ * @param request to be freed
+ */
 static void thread_free_request(void *request) {
     free(request);
 }
 
+/**
+ * @brief Unlink fifo.
+ * 
+ * @param fifo_name fifo's name.
+ */
 static void thread_unlink_fifo(void *fifo_name) {
     char *fifo_name_ptr = (char *)fifo_name;
     if (unlink(fifo_name_ptr) == -1) {
@@ -28,6 +38,11 @@ static void thread_unlink_fifo(void *fifo_name) {
     }
 }
 
+/**
+ * @brief Close fifo.
+ * 
+ * @param fd fifo file descriptor.
+ */
 static void thread_close_fifo(void *fd) {
     int fifo_fd = *((int *)fd);
     if (close(fifo_fd) == -1) {
