@@ -3,6 +3,12 @@
 
 #include <stdbool.h>
 
+/**
+ * @brief Function to validate the in
+ * @param argc Argc of main client
+ * @param argv Argv of main client
+ * @return True if the options are valid, false otherwise
+ */
 bool valid_client_options(int argc, char **argv);
 
 #endif
