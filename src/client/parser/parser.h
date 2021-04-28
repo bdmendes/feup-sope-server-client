@@ -4,7 +4,8 @@
 #include <stdbool.h>
 
 /**
- * @brief Function to validate the in
+ * @brief Function to validate the client command line arguments:
+ * "<executable> -t <timeout> <fifoname>"
  * @param argc Argc of main client
  * @param argv Argv of main client
  * @return True if the options are valid, false otherwise

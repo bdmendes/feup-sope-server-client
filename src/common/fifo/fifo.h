@@ -5,7 +5,7 @@
 
 /**
  * @brief Function to get the name of the private fifo accoording to pid and tid
- * @param buf Buffer ti return the name
+ * @param buf Buffer to store the name into
  * @param pid pid of the client process
  * @param tid Posix id of the client thread
  */
