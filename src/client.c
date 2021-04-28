@@ -10,6 +10,12 @@
 
 static int public_fifo_fd = -1;
 
+/**
+ * @brief Try to open the public fifo within the time given to execute
+ * @param public_fifo_name Name of the public fifo
+ * @return 0 upon success, -1 otherwise
+ */
+
 int open_public_fifo(char public_fifo_name[]) {
     struct timespec remaining_time;
     while ((public_fifo_fd = open(public_fifo_name, O_WRONLY | O_CLOEXEC)) ==
@@ -27,12 +33,18 @@ int open_public_fifo(char public_fifo_name[]) {
     return 0;
 }
 
+/**
+ * @brief Function to close the public fifo 
+ */
 void close_public_fifo() {
     if (close(public_fifo_fd) == -1) {
         perror("Could not close public fifo");
     }
 }
 
+/**
+ * @brief Function to creat the multiple threads
+ */ 
 void spawn_request_threads() {
     struct timespec remaining_time;
     pthread_t id;
