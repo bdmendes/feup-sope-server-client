@@ -53,7 +53,10 @@ void sleep_couple_ms(unsigned int *seed) {
 }
 
 /**
- * @brief Function to creat the multiple threads
+ * @brief Function to creat the multiple worker threads,
+ * with small in between delays
+ *
+ * @return int the success of all the spawing process
  */
 int spawn_request_threads() {
     struct timespec remaining_time;
