@@ -117,6 +117,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (open_public_fifo(argv[3]) == -1) {
+        destroy_timer();
         exit(EXIT_FAILURE);
     }
 
