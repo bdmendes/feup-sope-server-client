@@ -27,9 +27,15 @@ int get_timer_remaining_time(struct timespec *time);
 /**
  * @brief Check if both of the time struct member fields are zero.
  * 
- * @param time 
+ * @param time to check if zero
  * @return true if both of the time struct member fields are zero.
  */
 bool time_is_up(const struct timespec *time);
+
+/**
+ * @brief Cleanup routine to delete the previously set up timer
+ * 
+ */
+void destroy_timer();
 
 #endif

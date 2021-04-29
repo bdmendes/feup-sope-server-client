@@ -34,7 +34,7 @@ int open_public_fifo(char public_fifo_name[]) {
 }
 
 /**
- * @brief Function to close the public fifo 
+ * @brief Function to close the public fifo
  */
 void close_public_fifo() {
     if (close(public_fifo_fd) == -1) {
@@ -43,37 +43,63 @@ void close_public_fifo() {
 }
 
 /**
+ * @brief Sleep some random miliseconds.
+ *
+ * @param seed to pass to rand_r
+ */
+void sleep_couple_ms(unsigned int *seed) {
+    int delay = rand_r(seed);
+    usleep(10000 + delay % 40000);
+}
+
+/**
  * @brief Function to creat the multiple threads
- */ 
-void spawn_request_threads() {
+ */
+int spawn_request_threads() {
     struct timespec remaining_time;
     pthread_t id;
     pthread_attr_t tatrr;
-    pthread_attr_init(&tatrr);
-    pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED);
+    if (pthread_attr_init(&tatrr) != 0) {
+        perror("Could not initialize pthread attribute");
+        return -1;
+    }
+    if (pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED) != 0) {
+        perror("Could not set pthread attribute");
+        pthread_attr_destroy(&tatrr);
+        return -1;
+    }
     int request_counter = 0;
     unsigned int seed = time(NULL);
     while (!is_server_closed()) {
+        if (get_timer_remaining_time(&remaining_time) == -1) {
+            fprintf(stderr, "Could not set private fifo read timeout\n");
+            sleep_couple_ms(&seed);
+            continue;
+        }
+        if (time_is_up(&remaining_time)) {
+            break;
+        }
         Request *request = (Request *)malloc(sizeof(Request));
+        if (request == NULL) {
+            fprintf(stderr, "Could not allocate request struct\n");
+            sleep_couple_ms(&seed);
+            continue;
+        }
         request->load = 1 + rand_r(&seed) % 9;
         request->rid = request_counter++;
         request->public_fifo_fd = public_fifo_fd;
-        if (get_timer_remaining_time(&remaining_time) == -1) {
-            fprintf(stderr, "Could not set private fifo read timeout\n");
-        } else {
-            if (time_is_up(&remaining_time)) {
-                break;
-            }
-            request->private_fifo_timeout = remaining_time;
-            if (pthread_create(&id, &tatrr, request_server, (void *)request) !=
-                0) {
-                perror("Could not create thread");
-            }
+        request->private_fifo_timeout = remaining_time;
+        if (pthread_create(&id, &tatrr, request_server, request) != 0) {
+            perror("Could not create thread");
+            free(request);
         }
-        int delay = rand_r(&seed);
-        usleep(10000 + delay % 40000);
+        sleep_couple_ms(&seed);
     }
-    pthread_attr_destroy(&tatrr);
+    if (pthread_attr_destroy(&tatrr) != 0) {
+        perror("Could not destroy pthread attribute");
+        return -1;
+    }
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -91,8 +117,11 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    spawn_request_threads();
+    if (spawn_request_threads() == -1) {
+        fprintf(stderr, "Could not spawn all worker threads\n");
+    }
 
+    destroy_timer();
     atexit(close_public_fifo);
     pthread_exit(NULL);
 }
