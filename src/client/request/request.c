@@ -1,25 +1,25 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "request.h"
 #include "../../common/fifo/fifo.h"
 #include "../../common/log/log.h"
 #include "../../common/message/message.h"
+#include "request.h"
 
 static volatile bool server_closed = false;
 
-bool is_server_closed(){
+bool is_server_closed() {
     return server_closed;
 }
 
 /**
  * @brief Free the request
- * 
+ *
  * @param request to be freed
  */
 static void thread_free_request(void *request) {
@@ -28,7 +28,7 @@ static void thread_free_request(void *request) {
 
 /**
  * @brief Unlink fifo.
- * 
+ *
  * @param fifo_name fifo's name.
  */
 static void thread_unlink_fifo(void *fifo_name) {
@@ -40,7 +40,7 @@ static void thread_unlink_fifo(void *fifo_name) {
 
 /**
  * @brief Close fifo.
- * 
+ *
  * @param fd fifo file descriptor.
  */
 static void thread_close_fifo(void *fd) {
@@ -55,7 +55,7 @@ void *request_server(void *arg) {
     Message sent_msg;
     Request *request = (Request *)arg;
     assemble_message(&sent_msg, request->rid, request->load, -1);
-    pthread_cleanup_push(thread_free_request, (void *)request);
+    pthread_cleanup_push(thread_free_request, arg);
 
     /* Make private fifo */
     char private_fifo_name[PATH_MAX];
@@ -64,7 +64,7 @@ void *request_server(void *arg) {
         perror("Could not make private fifo");
         pthread_exit(NULL);
     }
-    pthread_cleanup_push(thread_unlink_fifo, (void *)private_fifo_name);
+    pthread_cleanup_push(thread_unlink_fifo, private_fifo_name);
 
     /* Open private fifo for reading */
     int private_fifo_fd = open(private_fifo_name, O_RDONLY | O_NONBLOCK);
@@ -72,7 +72,7 @@ void *request_server(void *arg) {
         perror("Could not open private fifo");
         pthread_exit(NULL);
     }
-    pthread_cleanup_push(thread_close_fifo, (void *)&private_fifo_fd);
+    pthread_cleanup_push(thread_close_fifo, &private_fifo_fd);
 
     /* Write request to public fifo */
     if (write(request->public_fifo_fd, &sent_msg, sizeof(sent_msg)) == -1) {

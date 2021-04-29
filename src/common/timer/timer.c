@@ -53,3 +53,9 @@ int get_timer_remaining_time(struct timespec *time) {
 bool time_is_up(const struct timespec *time) {
     return time->tv_sec == 0 && time->tv_nsec == 0;
 }
+
+void destroy_timer() {
+    if (timer_delete(timerid) == -1) {
+        perror("Could not destroy timer");
+    }
+}
