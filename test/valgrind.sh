@@ -8,8 +8,10 @@ valgrind -q --gen-suppressions=yes ./c asd -t 2
 valgrind -q --gen-suppressions=yes ./c -t asd 2
 valgrind -q --gen-suppressions=yes ./c 2 -t asd
 
-# Valid input test
-valgrind -q --gen-suppressions=yes ./c -t 2 asd
+# Valid input tests
+./s -t 5 asd & valgrind -q --leak-check=full ./c -t 3 asd
+./s -t 2 asd & valgrind -q --leak-check=full ./c -t 3 asd
+valgrind -q --leak-check=full ./c -t 3 asd
 
 cd ..
 echo "FINISHED TESTING CLIENT"
