@@ -8,7 +8,7 @@ typedef struct MessageQueue MessageQueue;
 
 MessageQueue* init_message_queue();
 
-int message_queue_push(MessageQueue* queue, Message msg);
+int message_queue_push(MessageQueue* queue, const Message* msg);
 
 int message_queue_pop(MessageQueue* queue);
 

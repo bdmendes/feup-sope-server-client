@@ -21,7 +21,7 @@ MessageQueue* init_message_queue(){
     return queue;
 }
 
-int message_queue_push(MessageQueue* queue, Message msg){
+int message_queue_push(MessageQueue* queue, const Message* msg){
     if (queue == NULL){
         fprintf(stderr, "Message queue is null\n");
         return -1;
@@ -32,7 +32,7 @@ int message_queue_push(MessageQueue* queue, Message msg){
         fprintf(stderr, "Could not allocate message queue node\n");
         return -1;
     }
-    node->element = msg;
+    node->element = *msg;
     node->next = NULL;
     if (queue->head == NULL){
         queue->head = node;
