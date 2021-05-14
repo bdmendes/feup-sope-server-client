@@ -9,6 +9,7 @@ struct MessageQueueNode {
 
 struct MessageQueue {
     struct MessageQueueNode* head;
+    unsigned size;
 };
 
 MessageQueue* init_message_queue(){
@@ -18,6 +19,7 @@ MessageQueue* init_message_queue(){
         return NULL;
     }
     queue->head = NULL;
+    queue->size = 0;
     return queue;
 }
 
@@ -39,6 +41,7 @@ int message_queue_push(MessageQueue* queue, const Message* msg){
     } else {
         queue->head->next = node;
     }
+    queue->size++;
     return 0;
 }
 
@@ -49,7 +52,12 @@ int message_queue_pop(MessageQueue* queue){
     }
     free(queue->head);
     queue->head = queue->head->next;
+    queue->size--;
     return 0;
+}
+
+unsigned message_queue_size(const MessageQueue* queue){
+    return queue->size;
 }
 
 Message message_queue_front(const MessageQueue* queue){
