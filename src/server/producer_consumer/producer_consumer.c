@@ -1,8 +1,9 @@
 #include "producer_consumer.h"
-#include "../message_queue/message_queue.h"
-#include "../lib/lib.h"
 #include <stdio.h>
 #include <pthread.h>
+
+#include "../message_queue/message_queue.h"
+#include "../lib/lib.h"
 
 static MessageQueue* pending;
 static MessageQueue* ready;
