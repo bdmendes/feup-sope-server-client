@@ -26,33 +26,16 @@ int main(){
             fprintf(stderr, "Could not creat the fifo\n");
             exit(EXIT_FAILURE);
         } else{
-            //unlink(name);
-            //mkfifo(name, 0666);
             printf("ab\n");
         }
-    }
-      printf("a\n");
-    int f = fork();
-    if(f != 0){
-        public_fifo_fd = open(name, O_RDONLY);
-        if(public_fifo_fd == -1){
-        fprintf(stderr, "Could not open fifo\n");
-        exit(EXIT_FAILURE);
-        }
-        printf("b\n");
-    } else{
-        open(name, O_WRONLY);
-        return 0;
     }
     
     public_fifo_fd = open(name, O_RDONLY);
     if(public_fifo_fd == -1){
         fprintf(stderr, "Could not open fifo\n");
         exit(EXIT_FAILURE);
-    }
-    printf("b\n");
+    } 
 
-    printf("open\n");
     while(true){
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not set timeout\n");
