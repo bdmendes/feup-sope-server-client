@@ -2,10 +2,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 #include "server/message_queue/message_queue.h"
 #include "common/log/log.h"
 #include "common/timer/timer.h"
+
+static int public_fifo_fd = -1;
 
 int main(){
     int nsecs = 5;
@@ -16,14 +20,39 @@ int main(){
     if (setup_timer(nsecs) == -1) {
         exit(EXIT_FAILURE);
     }
-   
+
     if(mkfifo(name, 0666) != 0){
         if(errno != EEXIST){
             fprintf(stderr, "Could not creat the fifo\n");
             exit(EXIT_FAILURE);
+        } else{
+            //unlink(name);
+            //mkfifo(name, 0666);
+            printf("ab\n");
         }
     }
+      printf("a\n");
+    int f = fork();
+    if(f != 0){
+        public_fifo_fd = open(name, O_RDONLY);
+        if(public_fifo_fd == -1){
+        fprintf(stderr, "Could not open fifo\n");
+        exit(EXIT_FAILURE);
+        }
+        printf("b\n");
+    } else{
+        open(name, O_WRONLY);
+        return 0;
+    }
+    
+    public_fifo_fd = open(name, O_RDONLY);
+    if(public_fifo_fd == -1){
+        fprintf(stderr, "Could not open fifo\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("b\n");
 
+    printf("open\n");
     while(true){
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not set timeout\n");
