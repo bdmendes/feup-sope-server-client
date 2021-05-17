@@ -2,19 +2,28 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "server/message_queue/message_queue.h"
 #include "common/log/log.h"
 #include "common/timer/timer.h"
 
 int main(){
     int nsecs = 5;
-    //char name[10] = "a_fifo";
+    char name[20] = "/tmp/a_fifo";
+
+    struct timespec remaining_time;
 
     if (setup_timer(nsecs) == -1) {
         exit(EXIT_FAILURE);
     }
-    
-    struct timespec remaining_time;
+   
+    if(mkfifo(name, 0666) != 0){
+        if(errno != EEXIST){
+            fprintf(stderr, "Could not creat the fifo\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
     while(true){
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not set timeout\n");
