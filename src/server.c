@@ -14,6 +14,7 @@
 static int public_fifo_fd = -1;
 
 int main(){
+    /*Testing values*/
     int nsecs = 5;
     char name[20] = "/tmp/a_fifo";
     unsigned buf_size = 10;
@@ -77,6 +78,7 @@ int main(){
             continue;
         }
         if(message != NULL){
+            log_operation(TSKEX, message->rid, message->tskload, message->tskres); //maybe this is not the the answer but that will do for test
             push_pending_request(message);
         }
         if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
