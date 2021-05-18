@@ -5,15 +5,18 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "server/message_queue/message_queue.h"
 #include "common/log/log.h"
 #include "common/timer/timer.h"
+#include "server/producer_consumer/producer_consumer.h"
 
 static int public_fifo_fd = -1;
 
 int main(){
     int nsecs = 5;
     char name[20] = "/tmp/a_fifo";
+    unsigned buf_size = 10;
 
     struct timespec remaining_time;
 
@@ -30,7 +33,22 @@ int main(){
         }
     }
 
-    MessageQueue* queue = init_message_queue();
+    pthread_t id;
+    pthread_attr_t tatrr;
+    if (pthread_attr_init(&tatrr) != 0) {
+        perror("Could not initialize pthread attribute");
+        return -1;
+    }
+    if (pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED) != 0) {
+        perror("Could not set pthread attribute");
+        pthread_attr_destroy(&tatrr);
+        return -1;
+    }
+
+    if(init_producer_consumer(buf_size) != 0){
+        fprintf(stderr, "Could not init producer consumer\n");
+        exit(EXIT_FAILURE);
+    }
 
     public_fifo_fd = open(name, O_RDONLY);
     if(public_fifo_fd == -1){
@@ -47,12 +65,17 @@ int main(){
             printf("hello\n");
             break;
         }
-        Message* message;
+        Message* message = NULL;
         if(read(public_fifo_fd, message, sizeof(message)) == -1){
             fprintf(stderr, "Could not read message\n");
             continue;
         }
-        push_pending_request(message);
+        if(message != NULL){
+            push_pending_request(message);
+        }
+        if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
+            perror("Could not create thread");
+        }
     }
 
     destroy_timer();
