@@ -1,9 +1,17 @@
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "server/message_queue/message_queue.h"
 #include "common/log/log.h"
+#include "server/parser/parser.h"
 
-int main(){
-    MessageQueue* queue = init_message_queue();
+int main(int argc, char **argv){
+     if(!valid_server_options(argc, argv)){
+        fprintf(stderr, "Usage: %s <-t nsecs> [-l bufsz] <fifoname>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /*MessageQueue* queue = init_message_queue();
     Message msg1, msg2;
     assemble_message(&msg1, 1, 1, 4);
     assemble_message(&msg2, 2, 5, 7);
@@ -24,5 +32,7 @@ int main(){
     printf("queue size: %u\n", message_queue_size(queue));
     message_queue_pop(queue);
     printf("is empty: %s\n", message_queue_empty(queue) ? "yes" : "no");
-    destroy_message_queue(queue);
+    destroy_message_queue(queue);*/
+
+    return 0;
 }
