@@ -61,32 +61,35 @@ int main(){
     }
     
 
+    bool server_closed = false;
     while(true){
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not set timeout\n");
             continue;
         }
         if (time_is_up(&remaining_time)) {
-            if(close(public_fifo_fd) != 0){
-                perror("Could not close the fifo\n");
-            }
-            break;
+            server_closed = true;
         }
         Message* message = NULL;
         if(read(public_fifo_fd, message, sizeof(message)) == -1){
             fprintf(stderr, "Could not read message\n");
-            continue;
+            break;
         }
-        if(message != NULL){
+        if(message != NULL && !server_closed){
             log_operation(TSKEX, message->rid, message->tskload, message->tskres); //maybe this is not the the answer but that will do for test
             push_pending_request(message);
-        }
-        if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
-            perror("Could not create producer thread");
+            if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
+                perror("Could not create producer thread");
+            }
         }
     }
 
     destroy_timer();
+
+    if(close(public_fifo_fd) != 0){
+        perror("Could not close the fifo\n");
+    }
+
     atexit(destroy_producer_consumer);
     pthread_exit(NULL);
 
