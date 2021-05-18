@@ -28,8 +28,6 @@ int main(){
         if(errno != EEXIST){
             fprintf(stderr, "Could not creat the fifo\n");
             exit(EXIT_FAILURE);
-        } else{
-            printf("ab\n");
         }
     }
 
@@ -56,13 +54,21 @@ int main(){
         exit(EXIT_FAILURE);
     } 
 
+    if (pthread_create(&id, &tatrr, consumer, NULL) != 0) {
+        perror("Could not create thread");
+        exit(EXIT_FAILURE);
+    }
+    
+
     while(true){
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not set timeout\n");
             continue;
         }
         if (time_is_up(&remaining_time)) {
-            printf("hello\n");
+            if(close(public_fifo_fd) != 0){
+                perror("Could not close the fifo\n");
+            }
             break;
         }
         Message* message = NULL;
@@ -74,11 +80,13 @@ int main(){
             push_pending_request(message);
         }
         if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
-            perror("Could not create thread");
+            perror("Could not create producer thread");
         }
     }
 
     destroy_timer();
+    atexit(destroy_producer_consumer);
+    pthread_exit(NULL);
 
     /*MessageQueue* queue = init_message_queue();
     Message msg1, msg2;
