@@ -29,7 +29,9 @@ int main(){
             printf("ab\n");
         }
     }
-    
+
+    MessageQueue* queue = init_message_queue();
+
     public_fifo_fd = open(name, O_RDONLY);
     if(public_fifo_fd == -1){
         fprintf(stderr, "Could not open fifo\n");
@@ -45,6 +47,12 @@ int main(){
             printf("hello\n");
             break;
         }
+        Message* message;
+        if(read(public_fifo_fd, message, sizeof(message)) == -1){
+            fprintf(stderr, "Could not read message\n");
+            continue;
+        }
+        push_pending_request(message);
     }
 
     destroy_timer();
