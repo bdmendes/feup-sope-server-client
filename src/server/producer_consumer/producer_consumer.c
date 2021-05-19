@@ -60,6 +60,11 @@ void *producer(void *arg) {
         answer; // it is up to the consumer to change the thread and process ids
                 // after popping from the ready queue, after gathering the
                 // prsys/stativate fifo info to send
+
+    log_operation(TSKEX, message.rid, message.tskload,
+                  message.tskres); // maybe this is not the the answer
+                                   // but that will do for test
+
     pthread_mutex_lock(&ready_mutex);
     message_queue_push(ready,
                        &message); // should we also limit the ready queue size?
