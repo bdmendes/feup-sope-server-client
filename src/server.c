@@ -1,3 +1,7 @@
+#include "common/log/log.h"
+#include "common/timer/timer.h"
+#include "server/message_queue/message_queue.h"
+#include "server/producer_consumer/producer_consumer.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -7,13 +11,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "common/log/log.h"
-#include "common/timer/timer.h"
-#include "server/message_queue/message_queue.h"
-#include "server/producer_consumer/producer_consumer.h"
-
 static int public_fifo_fd = -1;
-volatile bool server_closed = false;
 
 int main() {
     /*Testing values*/
@@ -67,24 +65,23 @@ int main() {
             fprintf(stderr, "Could not set timeout\n");
             continue;
         }
-        if (time_is_up(&remaining_time)) {
-            server_closed = true;
-        }
         Message message;
-        if (read(public_fifo_fd, &message, sizeof(message)) == -1) {
-            fprintf(stderr, "Could not read message\n");
-            break;
-        }
-        if (!server_closed) {
-            log_operation(RECVD, message.rid, message.tskload, message.tskres);
-            push_pending_request(&message);
-            if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
-                perror("Could not create producer thread");
+        if (read(public_fifo_fd, &message, sizeof(message)) <= 0) {
+            if (time_is_up(&remaining_time)) {
+                break;
+            } else {
+                usleep(BUSY_WAIT_DELAY_MICROS);
+                continue;
             }
+        }
+        log_operation(RECVD, message.rid, message.tskload, message.tskres);
+        push_pending_request(&message);
+        if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
+            perror("Could not create producer thread");
         }
     }
 
-    destroy_timer();
+    // destroy_timer();
 
     if (close(public_fifo_fd) != 0) {
         perror("Could not close the fifo\n");
@@ -92,27 +89,4 @@ int main() {
 
     atexit(destroy_producer_consumer);
     pthread_exit(NULL);
-
-    /*MessageQueue* queue = init_message_queue();
-    Message msg1, msg2;
-    assemble_message(&msg1, 1, 1, 4);
-    assemble_message(&msg2, 2, 5, 7);
-    printf("is empty: %s\n", message_queue_empty(queue) ? "yes" : "no");
-    printf("queue size: %u\n", message_queue_size(queue));
-    message_queue_push(queue, &msg1);
-    message_queue_push(queue, &msg2);
-    printf("queue size: %u\n", message_queue_size(queue));
-    printf("is empty: %s\n", message_queue_empty(queue) ? "yes" : "no");
-    Message msg_front = message_queue_front(queue);
-    log_operation(IWANT, msg_front.rid, msg_front.tskload, msg_front.tskres);
-    msg1.rid = 30; // must not affect the queue
-    log_operation(IWANT, msg_front.rid, msg_front.tskload, msg_front.tskres);
-    message_queue_pop(queue);
-    msg_front = message_queue_front(queue);
-    log_operation(IWANT, msg_front.rid, msg_front.tskload, msg_front.tskres);
-    printf("is empty: %s\n", message_queue_empty(queue) ? "yes" : "no");
-    printf("queue size: %u\n", message_queue_size(queue));
-    message_queue_pop(queue);
-    printf("is empty: %s\n", message_queue_empty(queue) ? "yes" : "no");
-    destroy_message_queue(queue);*/
 }
