@@ -74,7 +74,7 @@ int main(){
             fprintf(stderr, "Could not read message\n");
             break;
         }
-        if(message != NULL && !is_server_closed()){
+        if(message != NULL){
             log_operation(RECVD, message->rid, message->tskload, message->tskres); //maybe this is not the the answer but that will do for test
             push_pending_request(message);
             if (pthread_create(&id, &tatrr, producer, NULL) != 0) {

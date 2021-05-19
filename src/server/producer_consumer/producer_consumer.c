@@ -49,11 +49,14 @@ void *producer(void *arg) {
     message_queue_pop(pending);
     pthread_cond_broadcast(&pending_cond);
     pthread_mutex_unlock(&pending_mutex);
-    int answer = task(message.tskload);
-    message.tskres =
-        answer; // it is up to the consumer to change the thread and process ids
-                // after popping from the ready queue, after gathering the
-                // private fifo info to send
+
+    if(!is_server_closed()){  //Should it be here? What if the server closes but there are still some requests received in time not processed?
+        int answer = task(message.tskload);
+        message.tskres =
+            answer; // it is up to the consumer to change the thread and process ids
+                    // after popping from the ready queue, after gathering the
+                    // private fifo info to send
+    }
     pthread_mutex_lock(&ready_mutex);
     message_queue_push(ready,
                        &message); // should we also limit the ready queue size?
