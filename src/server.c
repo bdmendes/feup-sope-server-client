@@ -10,8 +10,14 @@ int main(int argc, char **argv){
         fprintf(stderr, "Usage: %s <-t nsecs> [-l bufsz] <fifoname>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+    int nsecs = atoi(argv[2]);
+    char *fifoname = argv[argc - 1];
+    int bufsz;
+    if(argc == 6) bufsz = atoi(argv[4]);
 
-    /*MessageQueue* queue = init_message_queue();
+    printf("nsecs = %d, fifoname = %s, bufsz = %d\n", nsecs, fifoname, bufsz);
+
+    MessageQueue* queue = init_message_queue();
     Message msg1, msg2;
     assemble_message(&msg1, 1, 1, 4);
     assemble_message(&msg2, 2, 5, 7);
@@ -32,7 +38,7 @@ int main(int argc, char **argv){
     printf("queue size: %u\n", message_queue_size(queue));
     message_queue_pop(queue);
     printf("is empty: %s\n", message_queue_empty(queue) ? "yes" : "no");
-    destroy_message_queue(queue);*/
+    destroy_message_queue(queue);
 
     return 0;
 }
