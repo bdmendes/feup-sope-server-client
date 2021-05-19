@@ -1,8 +1,9 @@
 #ifndef PRODUCER_CONSUMER_H
 #define PRODUCER_CONSUMER_H
 
-#include "../../common/message/message.h"
 #include <stdbool.h>
+
+#include "../../common/message/message.h"
 
 int init_producer_consumer(unsigned buffer_size);
 
