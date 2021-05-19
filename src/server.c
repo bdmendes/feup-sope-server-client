@@ -13,13 +13,13 @@
 
 static int public_fifo_fd = -1;
 
-void make_fifo(char* name){
+int make_fifo(char* name){
     if(mkfifo(name, 0666) != 0){
         if(errno != EEXIST){
-            fprintf(stderr, "Could not creat the fifo\n");
-            exit(EXIT_FAILURE);
+            return -1;
         }
     }
+    return 0;
 }
 
 int initialize_pthread(pthread_attr_t* tatrr){
@@ -35,12 +35,11 @@ int initialize_pthread(pthread_attr_t* tatrr){
     return 0;
 }
 
-void creat_consumer( pthread_t* id, pthread_attr_t* tatrr){
+int creat_consumer( pthread_t* id, pthread_attr_t* tatrr){
     if (pthread_create(id, tatrr, consumer, NULL) != 0) {
-        perror("Could not create thread");
-        exit(EXIT_FAILURE);
+        return -1;
     }
-
+    return 0;
 }
 
 void listener( pthread_t* id, pthread_attr_t* tatrr){
@@ -69,12 +68,13 @@ void listener( pthread_t* id, pthread_attr_t* tatrr){
     }
 }
 
-void open_fifo(char* name){
+int open_fifo(char* name){
     public_fifo_fd = open(name, O_RDONLY);
     if(public_fifo_fd == -1){
         fprintf(stderr, "Could not open fifo\n");
-        exit(EXIT_FAILURE);
+        return -1;
     } 
+    return 0;
 }
 
 void close_fifo(){
@@ -93,21 +93,30 @@ int main(){
         exit(EXIT_FAILURE);
     }
 
-    make_fifo(name);
+    if(make_fifo(name)!= 0){
+        fprintf(stderr, "Could not creat the fifo\n");
+        exit(EXIT_FAILURE);
+    }
 
     pthread_t id;
     pthread_attr_t tatrr;
 
-    initialize_pthread(&tatrr);
+    if(initialize_pthread(&tatrr) != 0){
+        exit(EXIT_FAILURE);
+    }
 
     if(init_producer_consumer(buf_size) != 0){
         fprintf(stderr, "Could not init producer consumer\n");
         exit(EXIT_FAILURE);
     }
 
-    open_fifo(name);
+    if(open_fifo(name)!= 0){
+        exit(EXIT_FAILURE);
+    }
 
-    creat_consumer(&id, &tatrr);
+    if(creat_consumer(&id, &tatrr) != 0){
+        exit(EXIT_FAILURE);
+    }
 
     listener(&id, &tatrr);
 
