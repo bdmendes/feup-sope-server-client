@@ -13,6 +13,8 @@ static pthread_cond_t pending_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t ready_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t ready_cond = PTHREAD_COND_INITIALIZER;
 
+static bool server_closed = false;
+
 int init_producer_consumer(unsigned buffer_size) {
     pending = init_message_queue();
     ready = init_message_queue();
@@ -67,4 +69,12 @@ void *consumer(void *arg) {
 void destroy_producer_consumer() {
     destroy_message_queue(ready);
     destroy_message_queue(pending);
+}
+
+bool is_server_closed(){
+    return server_closed;
+}
+
+void close_server(){
+    server_closed = false;
 }

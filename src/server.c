@@ -61,21 +61,20 @@ int main(){
     }
     
 
-    bool server_closed = false;
     while(true){
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not set timeout\n");
             continue;
         }
         if (time_is_up(&remaining_time)) {
-            server_closed = true;
+            close_server();
         }
         Message* message = NULL;
         if(read(public_fifo_fd, message, sizeof(message)) == -1){
             fprintf(stderr, "Could not read message\n");
             break;
         }
-        if(message != NULL && !server_closed){
+        if(message != NULL && !is_server_closed()){
             log_operation(TSKEX, message->rid, message->tskload, message->tskres); //maybe this is not the the answer but that will do for test
             push_pending_request(message);
             if (pthread_create(&id, &tatrr, producer, NULL) != 0) {

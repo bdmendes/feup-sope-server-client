@@ -2,6 +2,7 @@
 #define PRODUCER_CONSUMER_H
 
 #include "../../common/message/message.h"
+#include <stdbool.h>
 
 int init_producer_consumer(unsigned buffer_size);
 
@@ -12,5 +13,9 @@ void *producer(void *arg);
 void *consumer(void *arg);
 
 void destroy_producer_consumer();
+
+bool is_server_closed();
+
+void close_server();
 
 #endif
