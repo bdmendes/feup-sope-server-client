@@ -1,7 +1,3 @@
-#include "common/log/log.h"
-#include "common/timer/timer.h"
-#include "server/message_queue/message_queue.h"
-#include "server/producer_consumer/producer_consumer.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -10,6 +6,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include "common/log/log.h"
+#include "common/timer/timer.h"
+#include "server/message_queue/message_queue.h"
+#include "server/producer_consumer/producer_consumer.h"
 
 static int public_fifo_fd = -1;
 
