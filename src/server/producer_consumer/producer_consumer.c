@@ -81,16 +81,15 @@ void *consumer(void *arg) {
             pthread_cond_wait(&ready_cond, &ready_mutex);
         }
         Message message = message_queue_front(ready);
-
         message_queue_pop(ready);
         pthread_cond_broadcast(&ready_cond);
+        pthread_mutex_unlock(&ready_mutex);
 
         char private_fifo_name[PATH_MAX];
         get_private_fifo_name(private_fifo_name, message.pid, message.tid);
-        int private_fifo_fd = open(private_fifo_name, O_WRONLY, O_NONBLOCK);
+        int private_fifo_fd = open(private_fifo_name, O_WRONLY);
         if (private_fifo_fd == -1) {
             perror("Could not open private fifo");
-            pthread_mutex_unlock(&ready_mutex);
             pthread_exit(NULL);
         }
 
@@ -104,14 +103,11 @@ void *consumer(void *arg) {
         if (write(private_fifo_fd, &message, sizeof(message)) == -1) {
             perror("Could not write to private fifo");
             log_operation(FAILD, message.rid, message.tskload, message.tskres);
-            pthread_mutex_unlock(&ready_mutex);
             pthread_exit(NULL);
         }
 
         OPERATION operation = server_closed ? TOOLATE : TSKDN;
         log_operation(operation, message.rid, message.tskload, message.tskres);
-
-        pthread_mutex_unlock(&ready_mutex);
     }
     pthread_exit(NULL);
 }
