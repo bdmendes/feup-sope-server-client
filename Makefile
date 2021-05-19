@@ -11,7 +11,7 @@ _CLIENT_FILES = client.c common/utils/utils.c client/parser/parser.c common/mess
 CLIENT_FILES = $(addprefix ${SRC_DIR}/, ${_CLIENT_FILES})
 
 SERVER_NAME = s
-_SERVER_FILES = server.c server/message_queue/message_queue.c common/message/message.c common/timer/timer.c common/log/log.c server/lib/lib.c server/producer_consumer/producer_consumer.c server/lib/delay.c
+_SERVER_FILES = server.c server/message_queue/message_queue.c common/message/message.c common/timer/timer.c common/log/log.c common/fifo/fifo.c server/lib/lib.c server/producer_consumer/producer_consumer.c server/lib/delay.c
 SERVER_FILES = $(addprefix ${SRC_DIR}/, ${_SERVER_FILES})
 
 all: ${BIN_DIR} ${BIN_DIR}/${SERVER_NAME} ${BIN_DIR}/${CLIENT_NAME}

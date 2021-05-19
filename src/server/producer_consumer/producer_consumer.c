@@ -1,7 +1,13 @@
 #include "producer_consumer.h"
+#include <dirent.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 
+#include "../../common/fifo/fifo.h"
+#include "../../common/log/log.h"
 #include "../lib/lib.h"
 #include "../message_queue/message_queue.h"
 
@@ -12,6 +18,8 @@ static pthread_mutex_t pending_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t pending_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t ready_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t ready_cond = PTHREAD_COND_INITIALIZER;
+
+extern volatile bool server_closed;
 
 int init_producer_consumer(unsigned buffer_size) {
     pending = init_message_queue();
@@ -51,7 +59,7 @@ void *producer(void *arg) {
     message.tskres =
         answer; // it is up to the consumer to change the thread and process ids
                 // after popping from the ready queue, after gathering the
-                // private fifo info to send
+                // prsys/stativate fifo info to send
     pthread_mutex_lock(&ready_mutex);
     message_queue_push(ready,
                        &message); // should we also limit the ready queue size?
@@ -61,6 +69,45 @@ void *producer(void *arg) {
 }
 
 void *consumer(void *arg) {
+
+    while (true) {
+        pthread_mutex_lock(&ready_mutex);
+        while (message_queue_empty(ready)) {
+            pthread_cond_wait(&ready_cond, &ready_mutex);
+        }
+        Message message = message_queue_front(ready);
+
+        message_queue_pop(ready);
+        pthread_cond_broadcast(&ready_cond);
+
+        char private_fifo_name[PATH_MAX];
+        get_private_fifo_name(private_fifo_name, message.pid, message.tid);
+        int private_fifo_fd = open(private_fifo_name, O_WRONLY, O_NONBLOCK);
+        if (private_fifo_fd == -1) {
+            perror("Could not open private fifo");
+            pthread_mutex_unlock(&ready_mutex);
+            pthread_exit(NULL);
+        }
+
+        message.pid = getpid();
+        message.tid = pthread_self();
+
+        if (server_closed) {
+            message.tskres = -1;
+        }
+
+        if (write(private_fifo_fd, &message, sizeof(message)) == -1) {
+            perror("Could not write to private fifo");
+            log_operation(FAILD, message.rid, message.tskload, message.tskres);
+            pthread_mutex_unlock(&ready_mutex);
+            pthread_exit(NULL);
+        }
+
+        OPERATION operation = server_closed ? TOOLATE : TSKDN;
+        log_operation(operation, message.rid, message.tskload, message.tskres);
+
+        pthread_mutex_unlock(&ready_mutex);
+    }
     pthread_exit(NULL);
 }
 

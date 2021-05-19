@@ -1,19 +1,21 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <unistd.h>
+#include <fcntl.h>
 #include <pthread.h>
-#include "server/message_queue/message_queue.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "common/log/log.h"
 #include "common/timer/timer.h"
+#include "server/message_queue/message_queue.h"
 #include "server/producer_consumer/producer_consumer.h"
 
 static int public_fifo_fd = -1;
+volatile bool server_closed = false;
 
-int main(){
+int main() {
     /*Testing values*/
     int nsecs = 5;
     char name[20] = "/tmp/a_fifo";
@@ -25,8 +27,8 @@ int main(){
         exit(EXIT_FAILURE);
     }
 
-    if(mkfifo(name, 0666) != 0){
-        if(errno != EEXIST){
+    if (mkfifo(name, 0666) != 0) {
+        if (errno != EEXIST) {
             fprintf(stderr, "Could not creat the fifo\n");
             exit(EXIT_FAILURE);
         }
@@ -44,25 +46,23 @@ int main(){
         return -1;
     }
 
-    if(init_producer_consumer(buf_size) != 0){
+    if (init_producer_consumer(buf_size) != 0) {
         fprintf(stderr, "Could not init producer consumer\n");
         exit(EXIT_FAILURE);
     }
 
     public_fifo_fd = open(name, O_RDONLY);
-    if(public_fifo_fd == -1){
+    if (public_fifo_fd == -1) {
         fprintf(stderr, "Could not open fifo\n");
         exit(EXIT_FAILURE);
-    } 
+    }
 
     if (pthread_create(&id, &tatrr, consumer, NULL) != 0) {
         perror("Could not create thread");
         exit(EXIT_FAILURE);
     }
-    
 
-    bool server_closed = false;
-    while(true){
+    while (true) {
         if (get_timer_remaining_time(&remaining_time) == -1) {
             fprintf(stderr, "Could not set timeout\n");
             continue;
@@ -70,14 +70,16 @@ int main(){
         if (time_is_up(&remaining_time)) {
             server_closed = true;
         }
-        Message* message = NULL;
-        if(read(public_fifo_fd, message, sizeof(message)) == -1){
+        Message message;
+        if (read(public_fifo_fd, &message, sizeof(message)) == -1) {
             fprintf(stderr, "Could not read message\n");
             break;
         }
-        if(message != NULL && !server_closed){
-            log_operation(TSKEX, message->rid, message->tskload, message->tskres); //maybe this is not the the answer but that will do for test
-            push_pending_request(message);
+        if (!server_closed) {
+            log_operation(TSKEX, message.rid, message.tskload,
+                          message.tskres); // maybe this is not the the answer
+                                           // but that will do for test
+            push_pending_request(&message);
             if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
                 perror("Could not create producer thread");
             }
@@ -86,7 +88,7 @@ int main(){
 
     destroy_timer();
 
-    if(close(public_fifo_fd) != 0){
+    if (close(public_fifo_fd) != 0) {
         perror("Could not close the fifo\n");
     }
 
