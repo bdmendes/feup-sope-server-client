@@ -93,9 +93,7 @@ static void *consumer(void *arg) {
                 if (producer_count == 0 && message_queue_empty(ready)) {
                     pthread_mutex_unlock(&pcount_mutex);
                     pthread_mutex_unlock(&ready_mutex);
-                    printf("tenso1\n");
                     pthread_exit(NULL);
-                    printf("tenso2\n");
                 } else {
                     pthread_mutex_unlock(&pcount_mutex);
                     continue;
@@ -151,14 +149,13 @@ int pc_init(unsigned buffer_size) {
     /* Init data structures */
     pending = init_message_queue();
     ready = init_message_queue();
-    max_buffer_size = buffer_size;
+    max_buffer_size = buffer_size > 0 ? buffer_size : DEFAULT_BUF_SIZE;
     if (pending == NULL || ready == NULL) {
         fprintf(stderr, "Could not initialize producer consumer queues");
         return -1;
     }
 
     /* Start consumer thread */
-    pthread_t consumer_tid;
     if (pthread_create(&consumer_tid, NULL, consumer, NULL) != 0) {
         perror("Could not create consumer thread");
         return -1;
@@ -195,7 +192,6 @@ void pc_signal_server_closed() {
 }
 
 void pc_destroy() {
-    printf("dude!\n");
     if (pthread_join(consumer_tid, NULL) == -1) {
         perror("Could not wait for consumer thread to finish");
     }

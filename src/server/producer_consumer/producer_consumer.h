@@ -3,6 +3,8 @@
 
 #include "../../common/message/message.h"
 
+#define DEFAULT_BUF_SIZE 100
+
 int pc_init(unsigned buffer_size);
 
 void pc_push_pending_request(const Message *message);

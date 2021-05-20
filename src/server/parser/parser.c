@@ -16,7 +16,7 @@ bool valid_server_options(int argc, char **argv) {
     while ((opt = getopt(argc, argv, "t:l:")) != -1) {
         switch (opt) {
             case 't':
-                if (!is_all_digits(optarg) || optind != 3)
+                if (!is_all_digits(optarg) || atoi(optarg) == 0 || optind != 3)
                     return false;
                 break;
             case 'l':

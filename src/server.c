@@ -13,8 +13,6 @@
 #include "server/parser/parser.h"
 #include "server/producer_consumer/producer_consumer.h"
 
-#define DEFAULT_BUF_SIZE 100
-
 int listener(char fifo_name[]) {
     /* Open public fifo */
     int public_fifo_fd = open(fifo_name, O_RDONLY | O_NONBLOCK);
@@ -26,10 +24,7 @@ int listener(char fifo_name[]) {
     while (true) {
         /* Assemble remaining time */
         struct timespec remaining_time;
-        if (get_timer_remaining_time(&remaining_time) == -1) {
-            fprintf(stderr, "Could not set timeout\n");
-            continue;
-        }
+        get_timer_remaining_time(&remaining_time);
         if (time_is_up(&remaining_time)) {
             pc_signal_server_closed();
         }
@@ -53,10 +48,12 @@ int listener(char fifo_name[]) {
         Message message;
         if (read(public_fifo_fd, &message, sizeof(Message)) !=
             sizeof(Message)) {
-            if (time_is_up(&remaining_time))
+            get_timer_remaining_time(&remaining_time);
+            if (time_is_up(&remaining_time)) {
                 break;
-            else
+            } else {
                 continue;
+            }
         }
         log_operation(RECVD, message.rid, message.tskload, message.tskres);
         pc_push_pending_request(&message);
@@ -72,7 +69,6 @@ int listener(char fifo_name[]) {
 }
 
 void cleanup() {
-    printf("dude2\n");
     pc_destroy();
     destroy_timer();
 }
@@ -108,11 +104,9 @@ int main(int argc, char **argv) {
 
     atexit(cleanup);
 
-    printf("batata1\n");
     if (listener(public_fifo_name) == -1) {
         fprintf(stderr, "Listener failed\n");
     }
-    printf("batata2\n");
 
     if (unlink(public_fifo_name) == -1) {
         perror("Could not remove public fifo");
