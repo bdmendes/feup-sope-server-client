@@ -13,6 +13,11 @@
 #include "server/parser/parser.h"
 #include "server/producer_consumer/producer_consumer.h"
 
+/**
+ * @brief Function that receives the messages and creates the producers to treat them
+ * @param fifo_name Name of the public fifo
+ * @return 0 if no errors occurred, -1 otherwise 
+ */
 int listener(char fifo_name[]) {
     /* Open public fifo */
     int public_fifo_fd = open(fifo_name, O_RDONLY | O_NONBLOCK);
@@ -68,6 +73,9 @@ int listener(char fifo_name[]) {
     return 0;
 }
 
+/**
+ * @brief Function to free resources
+ */
 void cleanup() {
     pc_destroy();
     destroy_timer();

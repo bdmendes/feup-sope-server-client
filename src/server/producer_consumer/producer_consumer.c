@@ -33,6 +33,10 @@ static pthread_mutex_t ready_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t ready_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t pcount_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+/**
+ * @brief Function to get a relaxed run out time
+ * @param t Time structure to return
+ */
 static void get_relaxed_future_runout(struct timespec *t) {
     struct timespec curr_time, remaining_time;
     get_timer_remaining_time(&remaining_time);
@@ -41,6 +45,10 @@ static void get_relaxed_future_runout(struct timespec *t) {
     *t = curr_time;
 }
 
+/**
+ * @brief Producer thread boddy
+ * @param arg Arguments
+ */
 static void *producer(void *arg) {
     /* Increment producer count */
     pthread_mutex_lock(&pcount_mutex);
@@ -80,6 +88,10 @@ static void *producer(void *arg) {
     pthread_exit(NULL);
 }
 
+/**
+ * @brief Consumer thread boddy
+ * @param arg Arguments
+ */
 static void *consumer(void *arg) {
     while (true) {
         /* Wait for a ready answer with relaxed timeout */
@@ -156,6 +168,10 @@ static void *consumer(void *arg) {
     pthread_exit(NULL);
 }
 
+/**
+ * @brief Function to creat producer thread
+ * @return 0 uppon sucess, -1 otherwise
+ */
 static int spawn_producer() {
     pthread_t id;
     if (pthread_create(&id, &producer_tatrr, producer, NULL) != 0) {
