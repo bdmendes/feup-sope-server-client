@@ -105,6 +105,7 @@ int main(int argc, char **argv) {
                 argv[0]);
         exit(EXIT_FAILURE);
     }
+    setbuf(stdout, NULL);
     int nsecs = atoi(argv[2]);
     char *fifo_name = argv[argc - 1];
     int buf_size = argc == 6 ? atoi(argv[4]) : DEFAULT_BUF_SIZE;

@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -22,13 +23,13 @@ static pthread_mutex_t ready_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t ready_cond = PTHREAD_COND_INITIALIZER;
 static volatile bool server_closed = false;
 
-static void get_future_time_after_timeout(struct timespec *buf) {
+/* static void get_future_time_after_timeout(struct timespec *buf) {
     struct timespec curr_time, remaining_time;
     clock_gettime(CLOCK_MONOTONIC, &curr_time);
     get_timer_remaining_time(&remaining_time);
     curr_time.tv_sec += remaining_time.tv_sec + 1;
     *buf = curr_time;
-}
+} */
 
 int init_producer_consumer(unsigned buffer_size) {
     pending = init_message_queue();
@@ -72,13 +73,7 @@ void *producer(void *arg) {
     /* Send request to consumer queue */
     pthread_mutex_lock(&ready_mutex);
     while (message_queue_size(ready) >= max_buffer_size) {
-        struct timespec future;
-        get_future_time_after_timeout(&future);
-        if (pthread_cond_timedwait(&ready_cond, &ready_mutex, &future) ==
-            ETIMEDOUT) {
-            perror("Consumer took too long to free space on the buffer");
-            break;
-        }
+        pthread_cond_wait(&ready_cond, &ready_mutex);
     }
     message_queue_push(ready, &message);
     pthread_cond_signal(&ready_cond);
@@ -92,15 +87,7 @@ void *consumer(void *arg) {
         /* Wait for a ready answer with relaxed timeout */
         pthread_mutex_lock(&ready_mutex);
         while (message_queue_empty(ready)) {
-            struct timespec future;
-            get_future_time_after_timeout(&future);
-            if (pthread_cond_timedwait(&ready_cond, &ready_mutex, &future) ==
-                ETIMEDOUT) {
-                if (!server_closed)
-                    continue;
-                pthread_mutex_unlock(&ready_mutex);
-                pthread_exit(NULL);
-            }
+            pthread_cond_wait(&ready_cond, &ready_mutex);
         }
         Message message = message_queue_front(ready);
         message_queue_pop(ready);
