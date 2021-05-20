@@ -31,7 +31,8 @@
         "variant": "c",
         "fifo.h": "c",
         "request.h": "c",
-        "types.h": "c"
+        "types.h": "c",
+        "parser.h": "c"
     },
     "cpplint.filters": [
         "-whitespace",

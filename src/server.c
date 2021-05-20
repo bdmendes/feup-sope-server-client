@@ -17,7 +17,7 @@ int main(int argc, char **argv){
 
     printf("nsecs = %d, fifoname = %s, bufsz = %d\n", nsecs, fifoname, bufsz);
 
-    MessageQueue* queue = init_message_queue();
+    /*MessageQueue* queue = init_message_queue();
     Message msg1, msg2;
     assemble_message(&msg1, 1, 1, 4);
     assemble_message(&msg2, 2, 5, 7);
@@ -38,7 +38,7 @@ int main(int argc, char **argv){
     printf("queue size: %u\n", message_queue_size(queue));
     message_queue_pop(queue);
     printf("is empty: %s\n", message_queue_empty(queue) ? "yes" : "no");
-    destroy_message_queue(queue);
+    destroy_message_queue(queue);*/
 
     return 0;
 }
