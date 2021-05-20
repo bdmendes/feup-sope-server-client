@@ -11,6 +11,8 @@ void *producer(void *arg);
 
 void *consumer(void *arg);
 
+void pc_signal_server_closed();
+
 void destroy_producer_consumer();
 
 #endif
