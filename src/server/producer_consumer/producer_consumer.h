@@ -3,16 +3,12 @@
 
 #include "../../common/message/message.h"
 
-int init_producer_consumer(unsigned buffer_size);
+int pc_init(unsigned buffer_size);
 
-int push_pending_request(const Message *message);
-
-void *producer(void *arg);
-
-void *consumer(void *arg);
+void pc_push_pending_request(const Message *message);
 
 void pc_signal_server_closed();
 
-void destroy_producer_consumer();
+void pc_destroy();
 
 #endif

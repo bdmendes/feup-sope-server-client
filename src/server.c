@@ -23,19 +23,6 @@ int listener(char fifo_name[]) {
         return -1;
     }
 
-    /* Initialize detached thread attributes */
-    pthread_t id;
-    pthread_attr_t tatrr;
-    if (pthread_attr_init(&tatrr) != 0) {
-        perror("Could not initialize pthread attribute");
-        return -1;
-    }
-    if (pthread_attr_setdetachstate(&tatrr, PTHREAD_CREATE_DETACHED) != 0) {
-        perror("Could not set pthread attribute");
-        pthread_attr_destroy(&tatrr);
-        return -1;
-    }
-
     while (true) {
         /* Assemble remaining time */
         struct timespec remaining_time;
@@ -72,17 +59,7 @@ int listener(char fifo_name[]) {
                 continue;
         }
         log_operation(RECVD, message.rid, message.tskload, message.tskres);
-        push_pending_request(&message);
-        if (pthread_create(&id, &tatrr, producer, NULL) != 0) {
-            perror("Could not create producer thread");
-        }
-    }
-
-    /* Destroy thread attributes */
-    if (pthread_attr_destroy(&tatrr) == -1) {
-        perror("Could not destroy detached producer attributes");
-        close(public_fifo_fd);
-        return -1;
+        pc_push_pending_request(&message);
     }
 
     /* Close public fifo */
@@ -95,7 +72,8 @@ int listener(char fifo_name[]) {
 }
 
 void cleanup() {
-    destroy_producer_consumer();
+    printf("dude2\n");
+    pc_destroy();
     destroy_timer();
 }
 
@@ -107,12 +85,13 @@ int main(int argc, char **argv) {
     }
     setbuf(stdout, NULL);
     int nsecs = atoi(argv[2]);
-    char *fifo_name = argv[argc - 1];
+    char *public_fifo_name = argv[argc - 1];
     int buf_size = argc == 6 ? atoi(argv[4]) : DEFAULT_BUF_SIZE;
 
-    if (mkfifo(fifo_name, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+    if (mkfifo(public_fifo_name, S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
         if (errno != EEXIST) {
-            fprintf(stderr, "Could not create public fifo '%s'\n", fifo_name);
+            fprintf(stderr, "Could not create public fifo '%s'\n",
+                    public_fifo_name);
             exit(EXIT_FAILURE);
         }
     }
@@ -121,7 +100,7 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    if (init_producer_consumer(buf_size) != 0) {
+    if (pc_init(buf_size) != 0) {
         fprintf(stderr, "Could not init producer consumer\n");
         destroy_timer();
         exit(EXIT_FAILURE);
@@ -129,18 +108,14 @@ int main(int argc, char **argv) {
 
     atexit(cleanup);
 
-    pthread_t consumer_tid;
-    if (pthread_create(&consumer_tid, NULL, consumer, NULL) != 0) {
-        perror("Could not create consumer thread");
-        exit(EXIT_FAILURE);
-    }
-
-    if (listener(fifo_name) == -1) {
+    printf("batata1\n");
+    if (listener(public_fifo_name) == -1) {
         fprintf(stderr, "Listener failed\n");
     }
+    printf("batata2\n");
 
-    if (pthread_join(consumer_tid, NULL) == -1) {
-        perror("Could not wait for consumer thread to finish");
+    if (unlink(public_fifo_name) == -1) {
+        perror("Could not remove public fifo");
     }
 
     pthread_exit(NULL);
