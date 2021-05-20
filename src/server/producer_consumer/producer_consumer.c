@@ -89,6 +89,10 @@ static void *consumer(void *arg) {
             get_relaxed_future_runout(&future);
             if (pthread_cond_timedwait(&ready_cond, &ready_mutex, &future) ==
                 ETIMEDOUT) {
+                if (!message_queue_empty(ready)) {
+                    pthread_mutex_unlock(&ready_mutex);
+                    break;
+                }
                 pthread_mutex_lock(&pcount_mutex);
                 if (producer_count == 0) {
                     pthread_mutex_unlock(&pcount_mutex);
@@ -109,21 +113,38 @@ static void *consumer(void *arg) {
         char private_fifo_name[PATH_MAX];
         get_private_fifo_name(private_fifo_name, message.pid, message.tid);
         int private_fifo_fd;
-        if ((private_fifo_fd = open(private_fifo_name, O_WRONLY)) == -1) {
+        if ((private_fifo_fd =
+                 open(private_fifo_name, O_WRONLY | O_NONBLOCK)) == -1) {
             log_operation(FAILD, message.rid, message.tskload, message.tskres);
             usleep(BUSY_WAIT_DELAY_MICROS);
             continue;
         }
 
-        /* Send answer via private fifo */
+        /* Set thread identification */
         message.pid = getpid();
         message.tid = pthread_self();
-        if (write(private_fifo_fd, &message, sizeof(message)) <
-            sizeof(Message)) {
+
+        /* Send answer via private fifo */
+        struct timespec future;
+        get_relaxed_future_runout(&future);
+        fd_set set;
+        FD_ZERO(&set);
+        FD_SET(private_fifo_fd, &set);
+        int ready_fds =
+            pselect(private_fifo_fd + 1, NULL, &set, NULL, &future, NULL);
+        if (ready_fds <= 0) {
             log_operation(FAILD, message.rid, message.tskload, message.tskres);
+            usleep(BUSY_WAIT_DELAY_MICROS);
+            continue;
         } else {
-            log_operation(message.tskres == -1 ? TOOLATE : TSKDN, message.rid,
-                          message.tskload, message.tskres);
+            if (write(private_fifo_fd, &message, sizeof(message)) <
+                sizeof(Message)) {
+                log_operation(FAILD, message.rid, message.tskload,
+                              message.tskres);
+            } else {
+                log_operation(message.tskres == -1 ? TOOLATE : TSKDN,
+                              message.rid, message.tskload, message.tskres);
+            }
         }
 
         /* Close private fifo */
