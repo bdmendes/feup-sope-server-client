@@ -90,7 +90,6 @@ static void *consumer(void *arg) {
             if (pthread_cond_timedwait(&ready_cond, &ready_mutex, &future) ==
                 ETIMEDOUT) {
                 if (!message_queue_empty(ready)) {
-                    pthread_mutex_unlock(&ready_mutex);
                     break;
                 }
                 pthread_mutex_lock(&pcount_mutex);
