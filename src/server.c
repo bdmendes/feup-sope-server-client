@@ -45,7 +45,6 @@ int listener(char fifo_name[]) {
         }
         if (time_is_up(&remaining_time)) {
             pc_signal_server_closed();
-            break;
         }
 
         /* Wait for public fifo with relaxed timeout to attend late requests */
@@ -59,11 +58,7 @@ int listener(char fifo_name[]) {
             fprintf(stderr, "Wait for public fifo failed\n");
             usleep(BUSY_WAIT_DELAY_MICROS);
             continue;
-        }
-        bool public_fifo_timeout = ready_fds == 0;
-        if (public_fifo_timeout) {
-            printf("hey!!!");
-            fflush(stdout);
+        } else if (ready_fds == 0) {
             break;
         }
 
@@ -71,9 +66,10 @@ int listener(char fifo_name[]) {
         Message message;
         if (read(public_fifo_fd, &message, sizeof(Message)) !=
             sizeof(Message)) {
-            printf("hey2!!!");
-            fflush(stdout);
-            break;
+            if (time_is_up(&remaining_time))
+                break;
+            else
+                continue;
         }
         log_operation(RECVD, message.rid, message.tskload, message.tskres);
         push_pending_request(&message);
@@ -145,8 +141,6 @@ int main(int argc, char **argv) {
     if (pthread_join(consumer_tid, NULL) == -1) {
         perror("Could not wait for consumer thread to finish");
     }
-
-    fflush(stdout);
 
     pthread_exit(NULL);
 }
