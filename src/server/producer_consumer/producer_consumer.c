@@ -89,10 +89,8 @@ static void *consumer(void *arg) {
             get_relaxed_future_runout(&future);
             if (pthread_cond_timedwait(&ready_cond, &ready_mutex, &future) ==
                 ETIMEDOUT) {
-                struct timespec remaining_time;
-                get_timer_remaining_time(&remaining_time);
                 pthread_mutex_lock(&pcount_mutex);
-                if (producer_count == 0 && time_is_up(&remaining_time)) {
+                if (producer_count == 0) {
                     pthread_mutex_unlock(&pcount_mutex);
                     pthread_mutex_unlock(&ready_mutex);
                     pthread_exit(NULL);
