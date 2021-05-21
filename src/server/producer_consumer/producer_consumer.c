@@ -34,7 +34,7 @@ static pthread_cond_t ready_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t pcount_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
- * @brief Function to get a relaxed run out time
+ * @brief Function to get an absolute instant a bit after the timeout ends
  * @param t Time structure to return
  */
 static void get_relaxed_future_runout(struct timespec *t) {
@@ -136,17 +136,17 @@ static void *consumer(void *arg) {
         message.tid = pthread_self();
 
         /* Send answer via private fifo */
-        struct timespec future;
-        get_relaxed_future_runout(&future);
+        struct timespec remaining_time;
+        get_timer_remaining_time(&remaining_time);
+        remaining_time.tv_sec += 1;
         fd_set set;
         FD_ZERO(&set);
         FD_SET(private_fifo_fd, &set);
-        int ready_fds =
-            pselect(private_fifo_fd + 1, NULL, &set, NULL, &future, NULL);
+        int ready_fds = pselect(private_fifo_fd + 1, NULL, &set, NULL,
+                                &remaining_time, NULL);
         if (ready_fds <= 0) {
             log_operation(FAILD, message.rid, message.tskload, message.tskres);
             usleep(BUSY_WAIT_DELAY_MICROS);
-            continue;
         } else {
             if (write(private_fifo_fd, &message, sizeof(message)) <
                 sizeof(Message)) {
