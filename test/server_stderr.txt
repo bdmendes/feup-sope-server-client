@@ -1,1 +1,0 @@
-./script.sh: line 54: ./s: No such file or directory
